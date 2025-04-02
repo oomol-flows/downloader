@@ -1,3 +1,6 @@
+from shared.task import Task
+
+
 import os
 import time
 import requests
@@ -5,14 +8,13 @@ import requests
 from typing import Generator, Mapping, MutableMapping
 from threading import Lock
 from dataclasses import dataclass
-from .task import Task, Timeout
+from .task import Task, TaskResult, Timeout
 
 
 _DOWNALODING = "downloading"
 
 @dataclass
 class _File:
-  name: str
   offset: int
   complated_length: int
   target_length: int
@@ -59,13 +61,23 @@ class Serial:
   def etag(self) -> str | None:
     return self._etag
 
+  @property
+  def content_length(self) -> int:
+    return self._content_length
+
+  @property
+  def file_offsets(self) -> list[int]:
+    return [f.offset for f in self._files]
+
+  def to_chunk_file(self, offset: int) -> str:
+    return f"{self._name}.{offset}.{_DOWNALODING}{self._ext_name}"
+
   def load_buffer(self):
     for offset in self._search_chunks():
-      chunk_name = self._to_chunk_file(offset)
+      chunk_name = self.to_chunk_file(offset)
       chunk_path = os.path.join(self._base_path, chunk_name)
       chunk_length = os.path.getsize(chunk_path)
       self._files.append(_File(
-        name=chunk_name,
         offset=offset,
         complated_length=chunk_length,
         target_length=0,
@@ -86,17 +98,26 @@ class Serial:
   def rename_and_clean_buffer(self, name: str):
     if self._name != name:
       for offset in sorted(list(self._search_chunks())):
-        chunk_path = os.path.join(self._base_path, self._to_chunk_file(offset))
+        chunk_path = os.path.join(self._base_path, self.to_chunk_file(offset))
         os.remove(chunk_path)
 
     if len(self._files) == 0:
       self._files.append(self._create_first_file())
 
-  def get_task(self):
+  def stop_tasks(self):
+    for file in self._files:
+      task: Task
+      with file.task_lock:
+        if file.task is None:
+          continue
+        task = file.task
+      task.stop()
+
+  def get_task(self) -> Task | None:
     new_file: _File | None = None
     for file in self._files:
-      complated_length: int = file.complated_length
       with file.task_lock:
+        complated_length: int = file.complated_length
         if file.task is not None:
           complated_length = file.task.complated_length
 
@@ -115,7 +136,6 @@ class Serial:
 
       file.target_length = splitted_offset - file.offset
       new_file = _File(
-        name=self._to_chunk_file(new_offset),
         offset=new_offset,
         complated_length=0,
         target_length=new_end - new_offset,
@@ -135,7 +155,7 @@ class Serial:
       end=new_file.offset + new_file.target_length,
       headers=self._headers,
       cookies=self._cookies,
-      on_finished=lambda _: self._on_task_finished(new_file),
+      on_finished=lambda result: self._on_task_finished(new_file, result),
     )
     return new_file.task
 
@@ -166,7 +186,6 @@ class Serial:
 
   def _create_first_file(self) -> _File:
     return _File(
-      name=self._to_chunk_file(0),
       offset=0,
       complated_length=0,
       target_length=self._content_length,
@@ -174,12 +193,15 @@ class Serial:
       task_lock=Lock(),
     )
 
-  def _on_task_finished(self, file: _File):
+  def _on_task_finished(self, file: _File, _: TaskResult):
     with file.task_lock:
+      task = file.task
+      if task is None:
+        return
       file.task = None
-
-  def _to_chunk_file(self, offset: int) -> str:
-    return f"{self._name}.{offset}.{_DOWNALODING}{self._ext_name}"
+      chunk_name = self.to_chunk_file(file.offset)
+      chunk_path = os.path.join(self._base_path, chunk_name)
+      file.complated_length = os.path.getsize(chunk_path)
 
   def _search_chunks(self) -> Generator[int, None, None]:
     for file in os.listdir(self._base_path):
