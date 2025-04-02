@@ -1,0 +1,33 @@
+inputs_def:
+  - handle: url
+    description: Input
+    json_schema:
+      type: string
+  - handle: headers
+    json_schema:
+      type: object
+      additionalProperties:
+        type: string
+    value:
+    nullable: true
+  - handle: cookies
+    json_schema:
+      type: object
+      additionalProperties:
+        type: string
+    nullable: true
+    value:
+outputs_def:
+  - handle: output
+    description: Output
+    json_schema:
+      type: string
+ui:
+  default_width: 424.13086130073674
+executor:
+  name: python
+  options:
+    spawn: false
+    entry: __init__.py
+title: Download
+additional_inputs: false
