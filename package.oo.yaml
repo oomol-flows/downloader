@@ -6,3 +6,4 @@ scripts:
     set -e
     npm install
     pip install -r requirements.txt
+icon: ./icon.png
