@@ -1,7 +1,7 @@
 import io
 import requests
 
-from typing import Callable, Mapping, MutableMapping
+from typing import Any, Callable, Mapping, MutableMapping
 from enum import auto, Enum
 from threading import Lock, Event
 
@@ -17,18 +17,16 @@ class TaskResult(Enum):
 class Task:
   def __init__(
       self,
-      id: int,
       url: str,
       start: int,
       end: int,
-      on_finished: Callable[[int, TaskResult], None],
+      on_finished: Callable[[TaskResult], Any],
       headers: Mapping[str, str | bytes | None] | None = None,
       cookies: MutableMapping[str, str] | None = None,
     ) -> None:
 
-    self._id: int = id
     self._url: str = url
-    self._on_finished: Callable[[int, TaskResult], None] = on_finished
+    self._on_finished: Callable[[TaskResult], Any] = on_finished
     self._headers: Mapping[str, str | bytes | None] | None = headers
     self._cookies: MutableMapping[str, str] | None = cookies
     self._start: int = start
@@ -42,10 +40,6 @@ class Task:
     self._next_offset: int = start
 
   @property
-  def id(self) -> int:
-    return self._id
-
-  @property
   def start(self) -> int:
     return self._start
 
@@ -53,6 +47,10 @@ class Task:
   def end(self) -> int:
     with self._end_lock:
       return self._end
+
+  @property
+  def complated_length(self) -> int:
+    return self._offset - self._start
 
   def stop(self):
     self._stopped_event.set()
@@ -107,10 +105,10 @@ class Task:
           self._offset = next_offset
           if next_offset >= self._end:
             break
-      self._on_finished(self._id, result)
+      self._on_finished(result)
       return result
 
     except Exception as e:
       result = TaskResult.FAILURE
-      self._on_finished(self._id, TaskResult.FAILURE)
+      self._on_finished(TaskResult.FAILURE)
       raise e
