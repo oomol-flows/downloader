@@ -1,5 +1,4 @@
 import os
-import hashlib
 import shutil
 
 from dataclasses import dataclass
@@ -62,7 +61,6 @@ def download(
     buffer_path=buffer_path,
     timeout=timeout,
   )
-
   failure_error: BaseException | None = None
   did_clean_chunk_files: bool
 
@@ -155,12 +153,13 @@ def _merge_file(
           while written_count < target_count:
             next_step_count = min(_STEP_SIZE, target_count - written_count)
             chunk = input.read(next_step_count)
-            if not chunk:
+            if len(chunk) != next_step_count:
               raise ValueError(f"Unexpected end of chunk: {chunk_path}")
             output.write(chunk)
             written_count += next_step_count
             if md5_hash is not None:
               md5_hash.update(chunk)
+      output.flush()
 
   return len(offsets) == 1
 

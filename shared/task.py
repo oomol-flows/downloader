@@ -1,4 +1,5 @@
 import io
+import time
 import requests
 
 from typing import Any, Callable, Mapping, MutableMapping
@@ -21,13 +22,13 @@ class Task:
       start: int,
       end: int,
       complated_bytes: int,
-      on_finished: Callable[[TaskResult], Any],
+      on_finished: Callable[[int], Any],
       headers: Mapping[str, str | bytes | None] | None = None,
       cookies: MutableMapping[str, str] | None = None,
     ) -> None:
 
     self._url: str = url
-    self._on_finished: Callable[[TaskResult], Any] = on_finished
+    self._on_finished: Callable[[int], Any] = on_finished
     self._headers: Mapping[str, str | bytes | None] | None = headers
     self._cookies: MutableMapping[str, str] | None = cookies
     self._start: int = start
@@ -38,7 +39,7 @@ class Task:
     self._end_lock: Lock = Lock()
     self._stopped_event: Event = Event()
     self._offset: int = start + complated_bytes
-    self._next_offset: int = start
+    self._hold_offset: int = start - 1
 
   @property
   def start(self) -> int:
@@ -59,7 +60,7 @@ class Task:
   def update_end(self, end: int) -> int:
     updated_end = end
     with self._end_lock:
-      updated_end = max(end, self._next_offset)
+      updated_end = max(end, self._hold_offset)
       self._end = updated_end
     return updated_end
 
@@ -70,13 +71,13 @@ class Task:
       timeout: Timeout | None = None,
     ) -> TaskResult:
 
-    result: TaskResult = TaskResult.SUCCESS
+    written_count = 0
     headers: Mapping[str, str | bytes | None] = {**self._headers} if self._headers else {}
-
     with self._end_lock:
       headers["Range"] = f"{self._offset}-{self._end}"
 
     try:
+      result: TaskResult = TaskResult.SUCCESS
       with requests.Session().get(
         stream=True,
         url=self._url,
@@ -86,36 +87,38 @@ class Task:
       ) as resp:
         resp.raise_for_status()
         for chunk in resp.iter_content(chunk_size=chunk_size):
+          time.sleep(0.03)
           if self._stopped_event.is_set():
             result = TaskResult.STOPPED
             break
 
-          offset = self._offset
-          next_offset = offset + len(chunk)
-          is_last_chunk = False
+          # 在这个循环将下载偏移是 begin_offset ~- end_offset 之间的内容
+          begin_offset = self._offset
+          end_offset = self._offset + len(chunk) - 1
 
           with self._end_lock:
-            next_offset = min(self._end, next_offset)
-            self._next_offset = next_offset
-            is_last_chunk = (next_offset >= self._end)
+            end_offset = min(self._end, end_offset)
+            self._hold_offset = end_offset
+            is_last_chunk: bool = (end_offset >= self._end)
 
-          if offset == next_offset:
+          written_size: int = end_offset - begin_offset + 1
+          if written_size <= 0:
             break
-          elif offset + len(chunk) > next_offset:
-            file.write(chunk[:next_offset - offset])
+
+          if written_size < len(chunk):
+            file.write(chunk[:written_size])
           else:
             file.write(chunk)
 
-          self._offset = next_offset
+          written_count += written_size
+          self._offset = end_offset + 1
           if is_last_chunk:
             break
 
       file.flush()
-      self._on_finished(result)
-
+      self._on_finished(written_count)
       return result
 
     except Exception as e:
-      result = TaskResult.FAILURE
-      self._on_finished(TaskResult.FAILURE)
+      self._on_finished(written_count)
       raise e

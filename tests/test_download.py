@@ -18,7 +18,7 @@ _PROXY_HEADERS = {
 
 class TextFramework(unittest.TestCase):
   def test_download_single(self):
-    url = "https://plus.unsplash.com/premium_photo-1669018131211-5283d80e7104?q=80&w=3687&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
+    url = "https://upload.wikimedia.org/wikipedia/commons/thumb/8/87/GOODSMILE_Racing_Komatti-Mirai_EV_TT_Zero.jpg/2880px-GOODSMILE_Racing_Komatti-Mirai_EV_TT_Zero.jpg"
     buffer_path: str = os.path.join(__file__, "..", "..", "tmp")
     buffer_path = os.path.abspath(buffer_path)
 
@@ -33,20 +33,31 @@ class TextFramework(unittest.TestCase):
       timeout=None,
       retry_times=5,
       retry_sleep=0.0,
-      min_task_length=8192 * 1024,
-      threads_count=3,
+      min_task_length=8192 * 80,
+      threads_count=2,
       md5_hash=output_md5,
       headers=_PROXY_HEADERS,
     )
     self.assertEqual(
+      self.md5_with_file(output_path),
+      self.md5_with_url(url),
+    )
+    self.assertEqual(
+      self.md5_with_file(output_path),
       output_md5.hexdigest(),
-      self.md5(url),
     )
     print(output_path)
 
-  def md5(self, url: str) -> str:
+  def md5_with_url(self, url: str) -> str:
     response = requests.get(url, headers=_PROXY_HEADERS)
     response.raise_for_status()
     md5_hash = hashlib.md5()
     md5_hash.update(response.content)
+    return md5_hash.hexdigest()
+
+  def md5_with_file(self, file_path: str) -> str:
+    md5_hash = hashlib.md5()
+    with open(file_path, "rb") as f:
+      for chunk in iter(lambda: f.read(4096), b""):
+        md5_hash.update(chunk)
     return md5_hash.hexdigest()
