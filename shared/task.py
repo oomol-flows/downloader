@@ -1,5 +1,4 @@
 import io
-import time
 import requests
 
 from typing import Any, Callable, Mapping, MutableMapping
@@ -87,7 +86,6 @@ class Task:
       ) as resp:
         resp.raise_for_status()
         for chunk in resp.iter_content(chunk_size=chunk_size):
-          time.sleep(0.03)
           if self._stopped_event.is_set():
             result = TaskResult.STOPPED
             break
@@ -116,9 +114,7 @@ class Task:
             break
 
       file.flush()
-      self._on_finished(written_count)
       return result
 
-    except Exception as e:
+    finally:
       self._on_finished(written_count)
-      raise e

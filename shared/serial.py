@@ -8,7 +8,7 @@ import requests
 from typing import Generator, Mapping, MutableMapping
 from threading import Lock
 from dataclasses import dataclass
-from .task import Task, TaskResult, Timeout
+from .task import Task, Timeout
 
 
 _DOWNALODING = "downloading"
@@ -49,7 +49,7 @@ class Serial:
     self._cookies: MutableMapping[str, str] | None = cookies
 
     assert min_task_length > 1
-    content_length, etag = self._fetch_meta()
+    content_length, etag, range_uesable = self._fetch_meta()
     if content_length is None:
       raise ValueError(f"Content-Length is null: {url}")
 
@@ -57,6 +57,7 @@ class Serial:
     self._files_lock: Lock = Lock()
     self._etag: str | None = etag
     self._content_length: int = content_length
+    self._enable_range: bool = range_uesable
 
   @property
   def etag(self) -> str | None:
@@ -75,24 +76,31 @@ class Serial:
     return f"{self._name}.{offset}{self._ext_name}.{_DOWNALODING}"
 
   def load_buffer(self):
-    for offset in self._search_chunks():
-      chunk_name = self.to_chunk_file(offset)
-      chunk_path = os.path.join(self._base_path, chunk_name)
-      chunk_length = os.path.getsize(chunk_path)
-      self._files.append(_File(
-        offset=offset,
-        complated_length=chunk_length,
-        target_length=0,
-        task=None,
-        task_lock=Lock(),
-      ))
-    self._files.sort(key=lambda e: e.offset)
-    for i, file in enumerate(self._files):
-      if i < len(self._files) - 1:
-        next_file = self._files[i + 1]
-        file.target_length = next_file.offset - file.offset
-      else:
-        file.target_length = self._content_length - file.offset
+    if self._enable_range:
+      for offset in self._search_chunks():
+        chunk_name = self.to_chunk_file(offset)
+        chunk_path = os.path.join(self._base_path, chunk_name)
+        chunk_length = os.path.getsize(chunk_path)
+        self._files.append(_File(
+          offset=offset,
+          complated_length=chunk_length,
+          target_length=0,
+          task=None,
+          task_lock=Lock(),
+        ))
+      self._files.sort(key=lambda e: e.offset)
+
+      for i, file in enumerate(self._files):
+        if i < len(self._files) - 1:
+          next_file = self._files[i + 1]
+          file.target_length = next_file.offset - file.offset
+        else:
+          file.target_length = self._content_length - file.offset
+    else:
+      for offset in self._search_chunks():
+        chunk_name = self.to_chunk_file(offset)
+        chunk_path = os.path.join(self._base_path, chunk_name)
+        os.remove(chunk_path)
 
     if len(self._files) == 0:
       self._files.append(self._create_first_file())
@@ -117,55 +125,26 @@ class Serial:
         task.stop()
 
   def get_task(self) -> Task | None:
-    chosen_file: _File | None = None
     with self._files_lock:
-      for file in self._files:
-        with file.task_lock:
-          if file.complated_length >= file.target_length:
-            continue
+      file: _File | None
+      if self._enable_range:
+        file = self._select_or_split_next_file()
+      else:
+        file = self._no_range_file()
 
-          if file.task is None:
-            chosen_file = file
-          else:
-            complated_length = file.task.complated_length
-            remain_length: int = file.target_length - complated_length
-            if remain_length < 2 * self._min_task_length:
-              continue
+      if file is None:
+        return None
 
-            splitted_offset: int = file.offset + complated_length + self._min_task_length - 1
-            if file.task is not None:
-              splitted_offset = file.task.update_end(splitted_offset)
-
-            new_offset = splitted_offset + 1
-            new_end = file.offset + file.target_length
-            if new_offset > new_end:
-              continue
-
-            file.target_length = splitted_offset - file.offset
-            chosen_file = _File(
-              offset=new_offset,
-              complated_length=0,
-              target_length=new_end - new_offset,
-              task=None,
-              task_lock=Lock(),
-            )
-            self._files.append(chosen_file)
-            self._files.sort(key=lambda e: e.offset)
-            break
-
-    if chosen_file is None:
-      return None
-
-    chosen_file.task = Task(
-      url=self._url,
-      start=chosen_file.offset,
-      end=chosen_file.offset + chosen_file.target_length - 1,
-      completed_bytes=chosen_file.complated_length,
-      headers=self._headers,
-      cookies=self._cookies,
-      on_finished=lambda bytes_count: self._on_task_finished(chosen_file, bytes_count),
-    )
-    return chosen_file.task
+      file.task = Task(
+        url=self._url,
+        start=file.offset,
+        end=file.offset + file.target_length - 1,
+        completed_bytes=file.complated_length,
+        headers=self._headers,
+        cookies=self._cookies,
+        on_finished=lambda bytes_count: self._on_task_finished(file, bytes_count),
+      )
+      return file.task
 
   def _fetch_meta(self):
     resp: requests.Response | None = None
@@ -179,9 +158,11 @@ class Serial:
       if resp.status_code == 200:
         content_length = resp.headers.get("Content-Length")
         etag = resp.headers.get("ETag")
+        range_uesable = resp.headers.get("Accept-Ranges") == "bytes"
+
         if content_length is not None:
           content_length = int(content_length)
-        return content_length, etag
+        return content_length, etag, range_uesable
 
       elif resp.status_code in (408, 429, 502, 503, 504):
         if self._retry_sleep > 0.0 and i < self._retry_times: # not last times
@@ -191,6 +172,74 @@ class Serial:
 
     assert resp is not None
     raise Exception(f"Failed to fetch meta data: {resp.status_code} {resp.reason}")
+
+  def _no_range_file(self) -> _File | None:
+    file = self._files[0]
+    if file.task is not None:
+      return None # disable multi-threading downloading
+    if file.complated_length >= file.target_length:
+      return None
+    return file
+
+  def _select_or_split_next_file(self) -> _File | None:
+    def is_file_useable_thread_safe(file: _File):
+      with file.task_lock:
+        return self._is_file_useable(file)
+
+    useable_files = [f for f in self._files if is_file_useable_thread_safe(f)]
+    useable_files.sort(key=lambda f: (
+      0 if f.task is None else 1,
+      - (f.target_length - f.complated_length),
+    ))
+
+    for file in useable_files:
+      with file.task_lock:
+        if not self._is_file_useable(file):
+          # 两次上锁之间，状态可能发生变化
+          continue
+        if file.task is None:
+          return file
+        splitted_file = self._split_file(file)
+        if splitted_file is not None:
+          return splitted_file
+
+    return None
+
+  def _is_file_useable(self, file: _File):
+    if file.complated_length >= file.target_length:
+      return False
+
+    if file.task is None:
+      return True
+
+    remain_length: int = file.target_length - file.task.complated_length
+    if remain_length < 2 * self._min_task_length:
+      return False
+
+    return True
+
+  def _split_file(self, file: _File):
+    task = file.task
+    assert task is not None
+    splitted_offset: int = task.update_end(
+      file.offset + task.complated_length + self._min_task_length - 1,
+    )
+    new_offset = splitted_offset + 1
+    new_end = file.offset + file.target_length
+    if new_offset > new_end:
+      return None
+
+    file.target_length = splitted_offset - file.offset
+    splitted_file = _File(
+      offset=new_offset,
+      complated_length=0,
+      target_length=new_end - new_offset,
+      task=None,
+      task_lock=Lock(),
+    )
+    self._files.append(splitted_file)
+    self._files.sort(key=lambda e: e.offset)
+    return splitted_file
 
   def _create_first_file(self) -> _File:
     return _File(
