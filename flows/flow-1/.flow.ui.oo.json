@@ -1,0 +1,25 @@
+{
+  "nodes": {
+    "download#1": {
+      "contentWidth": 350,
+      "rfNode": {
+        "position": {
+          "x": 120,
+          "y": 180
+        }
+      },
+      "sections": {
+        "inputs": {
+          "collapsed": {
+            "headers": {
+              "[]": true
+            },
+            "cookies": {
+              "[]": true
+            }
+          }
+        }
+      }
+    }
+  }
+}

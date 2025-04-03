@@ -22,6 +22,7 @@ outputs_def:
     description: Output
     json_schema:
       type: string
+      ui:widget: save
 ui:
   default_width: 424.13086130073674
 executor:

@@ -30,7 +30,7 @@ def download(
     retry_sleep: float,
     min_task_length: int,
     threads_count: int,
-  ):
+  ) -> str:
   hash = str2sha256(url)
   ext_name = ext_from_url(url)
   file_name = f"{hash}{ext_name}"
@@ -81,6 +81,8 @@ def download(
     for chunk_path, _, _ in _list_chunk_infos(serial, buffer_path):
       if os.path.exists(chunk_path):
         os.remove(chunk_path)
+
+  return file_path
 
 def _download_serial(ctx: _Context, send: Callable[[_FailureEvent], None]):
   try:

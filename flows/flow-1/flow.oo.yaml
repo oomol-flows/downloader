@@ -1,2 +1,10 @@
 nodes:
-  []
+  - task: self::download
+    title: "Download #1"
+    node_id: download#1
+    inputs_from:
+      - handle: url
+      - handle: headers
+        value:
+      - handle: cookies
+        value:
