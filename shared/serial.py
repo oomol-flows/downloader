@@ -117,42 +117,7 @@ class Serial:
         task.stop()
 
   def get_task(self) -> Task | None:
-    chosen_file: _File | None = None
-    with self._files_lock:
-      for file in self._files:
-        with file.task_lock:
-          if file.complated_length >= file.target_length:
-            continue
-
-          if file.task is None:
-            chosen_file = file
-          else:
-            complated_length = file.task.complated_length
-            remain_length: int = file.target_length - complated_length
-            if remain_length < 2 * self._min_task_length:
-              continue
-
-            splitted_offset: int = file.offset + complated_length + self._min_task_length - 1
-            if file.task is not None:
-              splitted_offset = file.task.update_end(splitted_offset)
-
-            new_offset = splitted_offset + 1
-            new_end = file.offset + file.target_length
-            if new_offset > new_end:
-              continue
-
-            file.target_length = splitted_offset - file.offset
-            chosen_file = _File(
-              offset=new_offset,
-              complated_length=0,
-              target_length=new_end - new_offset,
-              task=None,
-              task_lock=Lock(),
-            )
-            self._files.append(chosen_file)
-            self._files.sort(key=lambda e: e.offset)
-            break
-
+    chosen_file = self._select_or_split_next_file()
     if chosen_file is None:
       return None
 
@@ -191,6 +156,66 @@ class Serial:
 
     assert resp is not None
     raise Exception(f"Failed to fetch meta data: {resp.status_code} {resp.reason}")
+
+  def _select_or_split_next_file(self):
+    with self._files_lock:
+      for file in self._files:
+        with file.task_lock:
+          if file.complated_length >= file.target_length:
+            continue
+
+          if file.task is None:
+            return file
+          else:
+            complated_length = file.task.complated_length
+            remain_length: int = file.target_length - complated_length
+            if remain_length < 2 * self._min_task_length:
+              continue
+
+            splitted_file = self._split_file(file)
+            if splitted_file is not None:
+              return splitted_file
+
+  def _useable_next_files(self):
+    files = [f for f in self._files if self._is_file_useable(f)]
+    files.sort(key=lambda f: f.target_length - f.complated_length)
+
+  def _is_file_useable(self, file: _File):
+    with file.task_lock:
+      if file.complated_length >= file.target_length:
+        return False
+
+      if file.task is None:
+        return True
+
+      remain_length: int = file.target_length - file.task.complated_length
+      if remain_length < 2 * self._min_task_length:
+        return False
+
+      return True
+
+  def _split_file(self, file: _File):
+    task = file.task
+    assert task is not None
+    splitted_offset: int = task.update_end(
+      file.offset + task.complated_length + self._min_task_length - 1,
+    )
+    new_offset = splitted_offset + 1
+    new_end = file.offset + file.target_length
+    if new_offset > new_end:
+      return None
+
+    file.target_length = splitted_offset - file.offset
+    splitted_file = _File(
+      offset=new_offset,
+      complated_length=0,
+      target_length=new_end - new_offset,
+      task=None,
+      task_lock=Lock(),
+    )
+    self._files.append(splitted_file)
+    self._files.sort(key=lambda e: e.offset)
+    return splitted_file
 
   def _create_first_file(self) -> _File:
     return _File(
