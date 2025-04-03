@@ -2,7 +2,7 @@ import os
 import shutil
 
 from dataclasses import dataclass
-from typing import Callable, Generator
+from typing import Callable, Generator, Mapping, MutableMapping
 
 from .serial import Serial
 from .task import TaskResult, Timeout
@@ -30,6 +30,8 @@ def download(
     retry_sleep: float,
     min_task_length: int,
     threads_count: int,
+    headers: Mapping[str, str | bytes | None] | None = None,
+    cookies: MutableMapping[str, str] | None = None,
   ) -> str:
   hash = str2sha256(url)
   ext_name = ext_from_url(url)
@@ -48,6 +50,8 @@ def download(
     retry_times=retry_times,
     retry_sleep=retry_sleep,
     min_task_length=min_task_length,
+    headers=headers,
+    cookies=cookies,
   )
   serial.load_buffer()
   ctx = _Context(
