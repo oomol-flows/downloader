@@ -20,6 +20,7 @@ class Task:
       url: str,
       start: int,
       end: int,
+      complated_bytes: int,
       on_finished: Callable[[TaskResult], Any],
       headers: Mapping[str, str | bytes | None] | None = None,
       cookies: MutableMapping[str, str] | None = None,
@@ -36,7 +37,7 @@ class Task:
 
     self._end_lock: Lock = Lock()
     self._stopped_event: Event = Event()
-    self._offset: int = start
+    self._offset: int = start + complated_bytes
     self._next_offset: int = start
 
   @property
@@ -73,7 +74,7 @@ class Task:
     headers: Mapping[str, str | bytes | None] = {**self._headers} if self._headers else {}
 
     with self._end_lock:
-      headers["Range"] = f"{self._start}-{self._end}"
+      headers["Range"] = f"{self._offset}-{self._end}"
 
     try:
       with requests.Session().get(

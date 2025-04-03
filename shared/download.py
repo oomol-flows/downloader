@@ -55,17 +55,22 @@ def download(
     buffer_path=buffer_path,
     timeout=timeout,
   )
-  failure_error: Exception | None = None
+  failure_error: BaseException | None = None
   did_clean_chunk_files: bool
 
-  for event in execute(
-    count=threads_count,
-    handler=lambda _, send: _download_serial(ctx, send),
-  ):
-    if isinstance(event, _FailureEvent):
-      if failure_error is None:
-        serial.stop_tasks()
-        failure_error = event.error
+  try:
+    for event in execute(
+      count=threads_count,
+      handler=lambda _, send: _download_serial(ctx, send),
+    ):
+      if isinstance(event, _FailureEvent):
+        if failure_error is None:
+          serial.stop_tasks()
+          failure_error = event.error
+
+  except KeyboardInterrupt as e:
+    serial.stop_tasks()
+    failure_error = e
 
   if failure_error is not None:
     raise failure_error
@@ -94,7 +99,7 @@ def _download_serial(ctx: _Context, send: Callable[[_FailureEvent], None]):
         ctx.buffer_path,
         ctx.serial.to_chunk_file(task.start),
       )
-      with open(file_path, "wb") as file:
+      with open(file_path, "ab") as file:
         result = task.do(
           file,
           chunk_size=_STEP_SIZE,

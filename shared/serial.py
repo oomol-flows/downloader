@@ -114,50 +114,54 @@ class Serial:
       task.stop()
 
   def get_task(self) -> Task | None:
-    new_file: _File | None = None
+    choosed_file: _File | None = None
     for file in self._files:
       with file.task_lock:
-        complated_length: int = file.complated_length
-        if file.task is not None:
-          complated_length = file.task.complated_length
-
-        remain_length: int = file.target_length - complated_length
-        if remain_length < 2 * self._min_task_length:
+        if file.complated_length >= file.target_length:
           continue
 
-        splitted_offset: int = file.offset + complated_length + self._min_task_length - 1
-        if file.task is not None:
-          splitted_offset = file.task.update_end(splitted_offset)
+        if file.task is None:
+          choosed_file = file
+        else:
+          complated_length = file.task.complated_length
+          remain_length: int = file.target_length - complated_length
+          if remain_length < 2 * self._min_task_length:
+            continue
 
-      new_offset = splitted_offset + 1
-      new_end = file.offset + file.target_length
-      if new_offset == new_end:
-        continue
+          splitted_offset: int = file.offset + complated_length + self._min_task_length - 1
+          if file.task is not None:
+            splitted_offset = file.task.update_end(splitted_offset)
 
-      file.target_length = splitted_offset - file.offset
-      new_file = _File(
-        offset=new_offset,
-        complated_length=0,
-        target_length=new_end - new_offset,
-        task=None,
-        task_lock=Lock(),
-      )
-      break
+          new_offset = splitted_offset + 1
+          new_end = file.offset + file.target_length
+          if new_offset == new_end:
+            continue
 
-    if new_file is None:
+          file.target_length = splitted_offset - file.offset
+          choosed_file = _File(
+            offset=new_offset,
+            complated_length=0,
+            target_length=new_end - new_offset,
+            task=None,
+            task_lock=Lock(),
+          )
+          self._files.append(choosed_file)
+          self._files.sort(key=lambda e: e.offset)
+          break
+
+    if choosed_file is None:
       return None
 
-    self._files.append(new_file)
-    self._files.sort(key=lambda e: e.offset)
-    new_file.task = Task(
+    choosed_file.task = Task(
       url=self._url,
-      start=new_file.offset,
-      end=new_file.offset + new_file.target_length,
+      start=choosed_file.offset,
+      end=choosed_file.offset + choosed_file.target_length,
+      complated_bytes=choosed_file.complated_length,
       headers=self._headers,
       cookies=self._cookies,
-      on_finished=lambda result: self._on_task_finished(new_file, result),
+      on_finished=lambda result: self._on_task_finished(choosed_file, result),
     )
-    return new_file.task
+    return choosed_file.task
 
   def _fetch_meta(self):
     resp: requests.Response | None = None
