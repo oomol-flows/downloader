@@ -8,7 +8,7 @@ import requests
 from typing import Generator, Mapping, MutableMapping
 from threading import Lock
 from dataclasses import dataclass
-from .task import Task, TaskResult, Timeout
+from .task import Task, Timeout
 
 
 _DOWNALODING = "downloading"
@@ -117,20 +117,21 @@ class Serial:
         task.stop()
 
   def get_task(self) -> Task | None:
-    chosen_file = self._select_or_split_next_file()
-    if chosen_file is None:
-      return None
+    with self._files_lock:
+      file = self._select_or_split_next_file()
+      if file is None:
+        return None
 
-    chosen_file.task = Task(
+    file.task = Task(
       url=self._url,
-      start=chosen_file.offset,
-      end=chosen_file.offset + chosen_file.target_length - 1,
-      completed_bytes=chosen_file.complated_length,
+      start=file.offset,
+      end=file.offset + file.target_length - 1,
+      completed_bytes=file.complated_length,
       headers=self._headers,
       cookies=self._cookies,
-      on_finished=lambda bytes_count: self._on_task_finished(chosen_file, bytes_count),
+      on_finished=lambda bytes_count: self._on_task_finished(file, bytes_count),
     )
-    return chosen_file.task
+    return file.task
 
   def _fetch_meta(self):
     resp: requests.Response | None = None
@@ -157,42 +158,42 @@ class Serial:
     assert resp is not None
     raise Exception(f"Failed to fetch meta data: {resp.status_code} {resp.reason}")
 
-  def _select_or_split_next_file(self):
-    with self._files_lock:
-      for file in self._files:
-        with file.task_lock:
-          if file.complated_length >= file.target_length:
-            continue
+  def _select_or_split_next_file(self) -> _File | None:
+    def is_file_useable_thread_safe(file: _File):
+      with file.task_lock:
+        return self._is_file_useable(file)
 
-          if file.task is None:
-            return file
-          else:
-            complated_length = file.task.complated_length
-            remain_length: int = file.target_length - complated_length
-            if remain_length < 2 * self._min_task_length:
-              continue
+    useable_files = [f for f in self._files if is_file_useable_thread_safe(f)]
+    useable_files.sort(key=lambda f: (
+      0 if f.task is None else 1,
+      - (f.target_length - f.complated_length),
+    ))
 
-            splitted_file = self._split_file(file)
-            if splitted_file is not None:
-              return splitted_file
+    for file in useable_files:
+      with file.task_lock:
+        if not self._is_file_useable(file):
+          # 两次上锁之间，状态可能发生变化
+          continue
+        if file.task is None:
+          return file
+        splitted_file = self._split_file(file)
+        if splitted_file is not None:
+          return splitted_file
 
-  def _useable_next_files(self):
-    files = [f for f in self._files if self._is_file_useable(f)]
-    files.sort(key=lambda f: f.target_length - f.complated_length)
+    return None
 
   def _is_file_useable(self, file: _File):
-    with file.task_lock:
-      if file.complated_length >= file.target_length:
-        return False
+    if file.complated_length >= file.target_length:
+      return False
 
-      if file.task is None:
-        return True
-
-      remain_length: int = file.target_length - file.task.complated_length
-      if remain_length < 2 * self._min_task_length:
-        return False
-
+    if file.task is None:
       return True
+
+    remain_length: int = file.target_length - file.task.complated_length
+    if remain_length < 2 * self._min_task_length:
+      return False
+
+    return True
 
   def _split_file(self, file: _File):
     task = file.task
