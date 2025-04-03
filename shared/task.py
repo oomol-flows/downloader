@@ -21,7 +21,7 @@ class Task:
       url: str,
       start: int,
       end: int,
-      complated_bytes: int,
+      completed_bytes: int,
       on_finished: Callable[[int], Any],
       headers: Mapping[str, str | bytes | None] | None = None,
       cookies: MutableMapping[str, str] | None = None,
@@ -38,7 +38,7 @@ class Task:
 
     self._end_lock: Lock = Lock()
     self._stopped_event: Event = Event()
-    self._offset: int = start + complated_bytes
+    self._offset: int = start + completed_bytes
     self._hold_offset: int = start - 1
 
   @property

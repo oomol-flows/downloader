@@ -117,7 +117,7 @@ class Serial:
         task.stop()
 
   def get_task(self) -> Task | None:
-    choosed_file: _File | None = None
+    chosen_file: _File | None = None
     with self._files_lock:
       for file in self._files:
         with file.task_lock:
@@ -125,7 +125,7 @@ class Serial:
             continue
 
           if file.task is None:
-            choosed_file = file
+            chosen_file = file
           else:
             complated_length = file.task.complated_length
             remain_length: int = file.target_length - complated_length
@@ -142,30 +142,30 @@ class Serial:
               continue
 
             file.target_length = splitted_offset - file.offset
-            choosed_file = _File(
+            chosen_file = _File(
               offset=new_offset,
               complated_length=0,
               target_length=new_end - new_offset,
               task=None,
               task_lock=Lock(),
             )
-            self._files.append(choosed_file)
+            self._files.append(chosen_file)
             self._files.sort(key=lambda e: e.offset)
             break
 
-    if choosed_file is None:
+    if chosen_file is None:
       return None
 
-    choosed_file.task = Task(
+    chosen_file.task = Task(
       url=self._url,
-      start=choosed_file.offset,
-      end=choosed_file.offset + choosed_file.target_length - 1,
-      complated_bytes=choosed_file.complated_length,
+      start=chosen_file.offset,
+      end=chosen_file.offset + chosen_file.target_length - 1,
+      completed_bytes=chosen_file.complated_length,
       headers=self._headers,
       cookies=self._cookies,
-      on_finished=lambda bytes_count: self._on_task_finished(choosed_file, bytes_count),
+      on_finished=lambda bytes_count: self._on_task_finished(chosen_file, bytes_count),
     )
-    return choosed_file.task
+    return chosen_file.task
 
   def _fetch_meta(self):
     resp: requests.Response | None = None
