@@ -106,7 +106,10 @@ class Task:
           self._offset = next_offset
           if next_offset >= self._end:
             break
+
+      file.flush()
       self._on_finished(result)
+
       return result
 
     except Exception as e:
