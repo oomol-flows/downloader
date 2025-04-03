@@ -114,9 +114,7 @@ class Task:
             break
 
       file.flush()
-      self._on_finished(written_count)
       return result
 
-    except Exception as e:
+    finally:
       self._on_finished(written_count)
-      raise e
