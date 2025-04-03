@@ -1,6 +1,8 @@
 import os
 import unittest
 import shutil
+import requests
+import hashlib
 
 from shared import download
 
@@ -16,7 +18,7 @@ _PROXY_HEADERS = {
 
 class TextFramework(unittest.TestCase):
   def test_download_single(self):
-    url = "https://upload.wikimedia.org/wikipedia/commons/thumb/8/87/GOODSMILE_Racing_Komatti-Mirai_EV_TT_Zero.jpg/2880px-GOODSMILE_Racing_Komatti-Mirai_EV_TT_Zero.jpg"
+    url = "https://plus.unsplash.com/premium_photo-1669018131211-5283d80e7104?q=80&w=3687&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
     buffer_path: str = os.path.join(__file__, "..", "..", "tmp")
     buffer_path = os.path.abspath(buffer_path)
 
@@ -24,6 +26,7 @@ class TextFramework(unittest.TestCase):
       shutil.rmtree(buffer_path)
     os.makedirs(buffer_path)
 
+    output_md5 = hashlib.md5()
     output_path = download(
       url=url,
       buffer_path=buffer_path,
@@ -32,6 +35,18 @@ class TextFramework(unittest.TestCase):
       retry_sleep=0.0,
       min_task_length=8192 * 1024,
       threads_count=3,
+      md5_hash=output_md5,
       headers=_PROXY_HEADERS,
     )
+    self.assertEqual(
+      output_md5.hexdigest(),
+      self.md5(url),
+    )
     print(output_path)
+
+  def md5(self, url: str) -> str:
+    response = requests.get(url, headers=_PROXY_HEADERS)
+    response.raise_for_status()
+    md5_hash = hashlib.md5()
+    md5_hash.update(response.content)
+    return md5_hash.hexdigest()

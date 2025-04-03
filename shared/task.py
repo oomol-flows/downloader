@@ -92,9 +92,12 @@ class Task:
 
           offset = self._offset
           next_offset = offset + len(chunk)
+          is_last_chunk = False
+
           with self._end_lock:
             next_offset = min(self._end, next_offset)
             self._next_offset = next_offset
+            is_last_chunk = (next_offset >= self._end)
 
           if offset == next_offset:
             break
@@ -104,7 +107,7 @@ class Task:
             file.write(chunk)
 
           self._offset = next_offset
-          if next_offset >= self._end:
+          if is_last_chunk:
             break
 
       file.flush()
