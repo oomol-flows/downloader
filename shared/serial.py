@@ -54,6 +54,7 @@ class Serial:
       raise ValueError(f"Content-Length is null: {url}")
 
     self._files: list[_File] = []
+    self._files_lock: Lock = Lock()
     self._etag: str | None = etag
     self._content_length: int = content_length
 
@@ -67,10 +68,11 @@ class Serial:
 
   @property
   def file_offsets(self) -> list[int]:
-    return [f.offset for f in self._files]
+    with self._files_lock:
+      return [f.offset for f in self._files]
 
   def to_chunk_file(self, offset: int) -> str:
-    return f"{self._name}.{offset}.{_DOWNALODING}{self._ext_name}"
+    return f"{self._name}.{offset}{self._ext_name}.{_DOWNALODING}"
 
   def load_buffer(self):
     for offset in self._search_chunks():
@@ -105,59 +107,65 @@ class Serial:
       self._files.append(self._create_first_file())
 
   def stop_tasks(self):
-    for file in self._files:
-      task: Task
-      with file.task_lock:
-        if file.task is None:
-          continue
-        task = file.task
-      task.stop()
+    with self._files_lock:
+      for file in self._files:
+        task: Task
+        with file.task_lock:
+          if file.task is None:
+            continue
+          task = file.task
+        task.stop()
 
   def get_task(self) -> Task | None:
-    new_file: _File | None = None
-    for file in self._files:
-      with file.task_lock:
-        complated_length: int = file.complated_length
-        if file.task is not None:
-          complated_length = file.task.complated_length
+    chosen_file: _File | None = None
+    with self._files_lock:
+      for file in self._files:
+        with file.task_lock:
+          if file.complated_length >= file.target_length:
+            continue
 
-        remain_length: int = file.target_length - complated_length
-        if remain_length < 2 * self._min_task_length:
-          continue
+          if file.task is None:
+            chosen_file = file
+          else:
+            complated_length = file.task.complated_length
+            remain_length: int = file.target_length - complated_length
+            if remain_length < 2 * self._min_task_length:
+              continue
 
-        splitted_offset: int = file.offset + complated_length + self._min_task_length - 1
-        if file.task is not None:
-          splitted_offset = file.task.update_end(splitted_offset)
+            splitted_offset: int = file.offset + complated_length + self._min_task_length - 1
+            if file.task is not None:
+              splitted_offset = file.task.update_end(splitted_offset)
 
-      new_offset = splitted_offset + 1
-      new_end = file.offset + file.target_length
-      if new_offset == new_end:
-        continue
+            new_offset = splitted_offset + 1
+            new_end = file.offset + file.target_length
+            if new_offset > new_end:
+              continue
 
-      file.target_length = splitted_offset - file.offset
-      new_file = _File(
-        offset=new_offset,
-        complated_length=0,
-        target_length=new_end - new_offset,
-        task=None,
-        task_lock=Lock(),
-      )
-      break
+            file.target_length = splitted_offset - file.offset
+            chosen_file = _File(
+              offset=new_offset,
+              complated_length=0,
+              target_length=new_end - new_offset,
+              task=None,
+              task_lock=Lock(),
+            )
+            self._files.append(chosen_file)
+            self._files.sort(key=lambda e: e.offset)
+            break
 
-    if new_file is None:
+    if chosen_file is None:
       return None
 
-    self._files.append(new_file)
-    self._files.sort(key=lambda e: e.offset)
-    new_file.task = Task(
+    chosen_file.task = Task(
       url=self._url,
-      start=new_file.offset,
-      end=new_file.offset + new_file.target_length,
+      start=chosen_file.offset,
+      end=chosen_file.offset + chosen_file.target_length - 1,
+      completed_bytes=chosen_file.complated_length,
       headers=self._headers,
       cookies=self._cookies,
-      on_finished=lambda result: self._on_task_finished(new_file, result),
+      on_finished=lambda bytes_count: self._on_task_finished(chosen_file, bytes_count),
     )
-    return new_file.task
+    return chosen_file.task
 
   def _fetch_meta(self):
     resp: requests.Response | None = None
@@ -193,26 +201,20 @@ class Serial:
       task_lock=Lock(),
     )
 
-  def _on_task_finished(self, file: _File, _: TaskResult):
+  def _on_task_finished(self, file: _File, bytes_count: int):
     with file.task_lock:
-      task = file.task
-      if task is None:
-        return
       file.task = None
-      chunk_name = self.to_chunk_file(file.offset)
-      chunk_path = os.path.join(self._base_path, chunk_name)
-      file.complated_length = os.path.getsize(chunk_path)
+      file.complated_length += bytes_count
 
   def _search_chunks(self) -> Generator[int, None, None]:
     for file in os.listdir(self._base_path):
-      file_name, ext = os.path.splitext(file)
-      if self._ext_name != ext:
+      cells = file.split(".")
+      if len(cells) != 4:
         continue
-      cells = file_name.split(".")
-      if len(cells) != 3:
-        continue
-      name, offset_text, mark = cells
+      name, offset_text, ext, mark = cells
       if self._name != name:
+        continue
+      if self._ext_name != f".{ext}":
         continue
       if mark != _DOWNALODING:
         continue
