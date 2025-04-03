@@ -70,7 +70,7 @@ class Serial:
     return [f.offset for f in self._files]
 
   def to_chunk_file(self, offset: int) -> str:
-    return f"{self._name}.{offset}.{_DOWNALODING}{self._ext_name}"
+    return f"{self._name}.{offset}{self._ext_name}.{_DOWNALODING}"
 
   def load_buffer(self):
     for offset in self._search_chunks():
@@ -209,14 +209,13 @@ class Serial:
 
   def _search_chunks(self) -> Generator[int, None, None]:
     for file in os.listdir(self._base_path):
-      file_name, ext = os.path.splitext(file)
-      if self._ext_name != ext:
+      cells = file.split(".")
+      if len(cells) != 4:
         continue
-      cells = file_name.split(".")
-      if len(cells) != 3:
-        continue
-      name, offset_text, mark = cells
+      name, offset_text, ext, mark = cells
       if self._name != name:
+        continue
+      if self._ext_name != f".{ext}":
         continue
       if mark != _DOWNALODING:
         continue
