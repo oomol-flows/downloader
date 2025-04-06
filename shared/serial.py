@@ -140,6 +140,7 @@ class Serial:
         start=file.offset,
         end=file.offset + file.target_length - 1,
         completed_bytes=file.complated_length,
+        total_bytes=self._content_length,
         headers=self._headers,
         cookies=self._cookies,
         on_finished=lambda bytes_count: self._on_task_finished(file, bytes_count),
