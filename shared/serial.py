@@ -5,7 +5,7 @@ import os
 import time
 import requests
 
-from typing import Generator, Mapping, MutableMapping
+from typing import Callable, Generator, Mapping, MutableMapping
 from threading import Lock
 from dataclasses import dataclass
 from .task import Task, Timeout
@@ -116,16 +116,6 @@ class Serial:
     if len(self._files) == 0:
       self._files.append(self._create_first_file())
 
-  def stop_tasks(self):
-    with self._files_lock:
-      for file in self._files:
-        task: Task
-        with file.task_lock:
-          if file.task is None:
-            continue
-          task = file.task
-        task.stop()
-
   # thread safe
   def get_task(self) -> Task | None:
     with self._files_lock:
@@ -153,6 +143,13 @@ class Serial:
         )
       return file.task
 
+  # thread safe
+  def stop_tasks(self):
+    self._stop_tasks(lambda _: True)
+
+  def transform_to_full_file_downloading(self):
+    pass
+
   def _fetch_meta(self):
     resp: requests.Response | None = None
     for i in range(self._retry_times + 1):
@@ -179,6 +176,18 @@ class Serial:
 
     assert resp is not None
     raise Exception(f"Failed to fetch meta data: {resp.status_code} {resp.reason}")
+
+  # thread safe
+  def _stop_tasks(self, filter: Callable[[Task], bool]):
+    with self._files_lock:
+      for file in self._files:
+        with file.task_lock:
+          task: Task | None = file.task
+          if task is None:
+            continue
+          if filter(task):
+            task.stop()
+            file.task = None
 
   def _no_range_file(self) -> _File | None:
     file = self._files[0]

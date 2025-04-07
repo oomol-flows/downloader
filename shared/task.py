@@ -13,6 +13,11 @@ class TaskResult(Enum):
   STOPPED=auto()
   FAILURE=auto()
 
+class AssertEnableRangeError(AssertionError):
+  def __init__(self, url: str) -> None:
+    super().__init__(f"Server does not support range requests: GET {url}")
+    self.url: str = url
+
 # thread safe class
 class Task:
   def __init__(
@@ -39,9 +44,11 @@ class Task:
     assert start <= end < total_bytes
 
     self._end_lock: Lock = Lock()
+    self._disable_update_end: bool = False
     self._stopped_event: Event = Event()
     self._offset: int = start + completed_bytes
     self._hold_offset: int = start - 1
+    self._must_use_range = (start + completed_bytes > 0 or end < total_bytes - 1)
     self._can_use_range: bool = False
     self._know_can_use_range_event: Event = Event()
 
@@ -74,12 +81,23 @@ class Task:
   def stop(self):
     self._stopped_event.set()
 
-  def update_end(self, end: int) -> int:
-    updated_end = end
+  # a full task means downloading from 0 to the end of file
+  def promoise_is_full_task(self) -> bool:
+    if not self._must_use_range:
+      return False
     with self._end_lock:
-      updated_end = max(end, self._hold_offset)
+      if self._end < self._total_bytes - 1:
+        return False
+      self._disable_update_end = True
+      return True
+
+  def update_end(self, end: int) -> int:
+    with self._end_lock:
+      if self._disable_update_end:
+        return self._end
+      updated_end: int = max(end, self._hold_offset)
       self._end = updated_end
-    return updated_end
+      return updated_end
 
   def do(
       self,
@@ -89,7 +107,6 @@ class Task:
     ) -> TaskResult:
 
     written_count = 0
-    must_use_range = (self._offset > 0 or self._end < self._total_bytes - 1)
     headers: Mapping[str, str | bytes | None] = {**self._headers} if self._headers else {}
 
     with self._end_lock:
@@ -106,8 +123,8 @@ class Task:
       ) as resp:
         resp.raise_for_status()
         enable_use_range = self._check_enable_range(resp)
-        if must_use_range and not enable_use_range:
-          raise RuntimeError("Server does not support range requests")
+        if self._must_use_range and not enable_use_range:
+          raise AssertEnableRangeError(self._url)
 
         if enable_use_range:
           self._can_use_range = True
