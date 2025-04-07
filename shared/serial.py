@@ -139,17 +139,18 @@ class Serial:
       if file is None:
         return None
 
-      file.task = Task(
-        url=self._url,
-        start=file.offset,
-        end=file.offset + file.target_length - 1,
-        completed_bytes=file.complated_length,
-        total_bytes=self._content_length,
-        assert_can_use_range=assert_can_use_range,
-        headers=self._headers,
-        cookies=self._cookies,
-        on_finished=lambda bytes_count: self._on_task_finished(file, bytes_count),
-      )
+      with file.task_lock:
+        file.task = Task(
+          url=self._url,
+          start=file.offset,
+          end=file.offset + file.target_length - 1,
+          completed_bytes=file.complated_length,
+          total_bytes=self._content_length,
+          assert_can_use_range=assert_can_use_range,
+          headers=self._headers,
+          cookies=self._cookies,
+          on_finished=lambda bytes_count: self._on_task_finished(file, bytes_count),
+        )
       return file.task
 
   def _fetch_meta(self):
@@ -202,6 +203,8 @@ class Serial:
 
     useable_files = [f for f in self._files if is_file_useable_thread_safe(f)]
     useable_file_keys = [file_key(i, f) for i, f in enumerate(useable_files)]
+    next_file: _File | None = None
+    assert_can_use_range: bool = False
 
     for _, _, i in sorted(useable_file_keys): # know_can_use_range 会中途变化，需要锁定
       file = useable_files[i]
@@ -210,12 +213,15 @@ class Serial:
           # 两次上锁之间，状态可能发生变化
           continue
         if file.task is None:
-          return file, False
+          next_file = file
+          break
         splitted_file = self._split_file(file)
         if splitted_file is not None:
-          return splitted_file, file.task.check_can_use_range()
+          next_file = splitted_file
+          assert_can_use_range = True
+          break
 
-    return None, False
+    return next_file, assert_can_use_range
 
   def _is_file_useable(self, file: _File):
     if file.complated_length >= file.target_length:
@@ -233,6 +239,9 @@ class Serial:
   def _split_file(self, file: _File):
     task = file.task
     assert task is not None
+    if not task.check_can_use_range():
+      return None
+
     splitted_offset: int = task.update_end(
       file.offset + task.complated_length + self._min_task_length - 1,
     )

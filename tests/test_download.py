@@ -33,7 +33,7 @@ class TextFramework(unittest.TestCase):
       timeout=None,
       retry_times=5,
       retry_sleep=0.0,
-      min_task_length=8192 * 80,
+      min_task_length=8192 * 8,
       threads_count=2,
       md5_hash=output_md5,
       headers=_PROXY_HEADERS,

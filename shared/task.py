@@ -145,6 +145,7 @@ class Task:
       return result
 
     finally:
+      self._know_can_use_range_event.set()
       self._on_finished(written_count)
 
   def _check_enable_range(self, resp: requests.Response) -> bool:
