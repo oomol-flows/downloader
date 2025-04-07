@@ -6,7 +6,7 @@ from _hashlib import HASH
 from typing import Callable, Generator, Mapping, MutableMapping
 
 from .serial import Serial
-from .task import TaskResult, Timeout
+from .task import TaskResult, Timeout, AssertEnableRangeError
 from .executor import execute
 from .utils import str2sha256, ext_from_url
 
@@ -110,14 +110,18 @@ def _download_serial(ctx: _Context, send: Callable[[_FailureEvent], None]):
         ctx.buffer_path,
         ctx.serial.to_chunk_file(task.start),
       )
-      with open(file_path, "ab") as file:
-        result = task.do(
-          file,
-          chunk_size=_STEP_SIZE,
-          timeout=ctx.timeout,
-        )
-      if result == TaskResult.STOPPED:
-        break
+      try:
+        with open(file_path, "ab") as file:
+          result = task.do(
+            file,
+            chunk_size=_STEP_SIZE,
+            timeout=ctx.timeout,
+          )
+        if result == TaskResult.STOPPED:
+          break
+      except AssertEnableRangeError as error:
+        print(error)
+        ctx.serial.transform_to_full_file_downloading()
 
   except Exception as e:
     send(_FailureEvent(e))

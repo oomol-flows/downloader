@@ -5,7 +5,7 @@ import os
 import time
 import requests
 
-from typing import Generator, Mapping, MutableMapping
+from typing import Callable, Generator, Mapping, MutableMapping
 from threading import Lock
 from dataclasses import dataclass
 from .task import Task, Timeout
@@ -57,7 +57,9 @@ class Serial:
     self._files_lock: Lock = Lock()
     self._etag: str | None = etag
     self._content_length: int = content_length
-    self._enable_range: bool = range_uesable
+    # 仅仅表示 Meta 信息显示允许 range 操作，但某些 server 依然会在发起 GET 请求后忽略 range 请求
+    # 这需要在 task 中的 resp 二次确认才能最终确定
+    self._meta_enable_range: bool = range_uesable
 
   @property
   def etag(self) -> str | None:
@@ -76,7 +78,7 @@ class Serial:
     return f"{self._name}.{offset}{self._ext_name}.{_DOWNALODING}"
 
   def load_buffer(self):
-    if self._enable_range:
+    if self._meta_enable_range:
       for offset in self._search_chunks():
         chunk_name = self.to_chunk_file(offset)
         chunk_path = os.path.join(self._base_path, chunk_name)
@@ -114,37 +116,66 @@ class Serial:
     if len(self._files) == 0:
       self._files.append(self._create_first_file())
 
-  def stop_tasks(self):
-    with self._files_lock:
-      for file in self._files:
-        task: Task
-        with file.task_lock:
-          if file.task is None:
-            continue
-          task = file.task
-        task.stop()
-
+  # thread safe
   def get_task(self) -> Task | None:
     with self._files_lock:
       file: _File | None
-      if self._enable_range:
-        file = self._select_or_split_next_file()
+      assert_can_use_range: bool = False
+      if self._meta_enable_range:
+        file, assert_can_use_range = self._select_or_split_next_file()
       else:
         file = self._no_range_file()
 
       if file is None:
         return None
 
-      file.task = Task(
-        url=self._url,
-        start=file.offset,
-        end=file.offset + file.target_length - 1,
-        completed_bytes=file.complated_length,
-        headers=self._headers,
-        cookies=self._cookies,
-        on_finished=lambda bytes_count: self._on_task_finished(file, bytes_count),
-      )
+      with file.task_lock:
+        file.task = Task(
+          url=self._url,
+          start=file.offset,
+          end=file.offset + file.target_length - 1,
+          completed_bytes=file.complated_length,
+          total_bytes=self._content_length,
+          assert_can_use_range=assert_can_use_range,
+          headers=self._headers,
+          cookies=self._cookies,
+          on_finished=lambda bytes_count: self._on_task_finished(file, bytes_count),
+        )
       return file.task
+
+  # thread safe
+  def stop_tasks(self):
+    with self._files_lock:
+      self._stop_tasks(lambda _: True)
+
+  # thread safe
+  def transform_to_full_file_downloading(self):
+    with self._files_lock:
+      full_file: _File | None = None
+      full_file_name: str | None = None
+
+      def filter(file: _File) -> bool:
+        nonlocal full_file, full_file_name
+        task = file.task
+        if task is not None and task.promoise_is_full_task():
+          full_file = file
+          full_file_name = self.to_chunk_file(file.offset)
+          return False
+        return True
+
+      self._stop_tasks(filter)
+
+      for offset in sorted(list(self._search_chunks())):
+        chunk_name = self.to_chunk_file(offset)
+        if full_file_name != chunk_name:
+          chunk_path = os.path.join(self._base_path, chunk_name)
+          os.remove(chunk_path)
+
+      if full_file is None:
+        full_file = self._create_first_file()
+
+      self._files.clear()
+      self._files.append(full_file)
 
   def _fetch_meta(self):
     resp: requests.Response | None = None
@@ -173,6 +204,16 @@ class Serial:
     assert resp is not None
     raise Exception(f"Failed to fetch meta data: {resp.status_code} {resp.reason}")
 
+  def _stop_tasks(self, filter: Callable[[_File], bool]):
+    for file in self._files:
+      with file.task_lock:
+        if filter(file):
+          task: Task | None = file.task
+          if task is None:
+            continue
+          task.stop()
+          file.task = None
+
   def _no_range_file(self) -> _File | None:
     file = self._files[0]
     if file.task is not None:
@@ -181,29 +222,40 @@ class Serial:
       return None
     return file
 
-  def _select_or_split_next_file(self) -> _File | None:
+  def _select_or_split_next_file(self) -> tuple[_File | None, bool]:
     def is_file_useable_thread_safe(file: _File):
       with file.task_lock:
         return self._is_file_useable(file)
 
-    useable_files = [f for f in self._files if is_file_useable_thread_safe(f)]
-    useable_files.sort(key=lambda f: (
-      0 if f.task is None else 1,
-      - (f.target_length - f.complated_length),
-    ))
+    def file_key(index: int, file: _File) -> tuple[int, int, int]:
+      first: int = 0
+      second: int = - (file.target_length - file.complated_length)
+      task = file.task
+      if task is not None:
+        first = 1 if task.know_can_use_range else 2
+      return first, second, index
 
-    for file in useable_files:
+    useable_files = [f for f in self._files if is_file_useable_thread_safe(f)]
+    useable_file_keys = [file_key(i, f) for i, f in enumerate(useable_files)]
+    next_file: _File | None = None
+    assert_can_use_range: bool = False
+
+    for _, _, i in sorted(useable_file_keys): # know_can_use_range 会中途变化，需要锁定
+      file = useable_files[i]
       with file.task_lock:
         if not self._is_file_useable(file):
           # 两次上锁之间，状态可能发生变化
           continue
         if file.task is None:
-          return file
+          next_file = file
+          break
         splitted_file = self._split_file(file)
         if splitted_file is not None:
-          return splitted_file
+          next_file = splitted_file
+          assert_can_use_range = True
+          break
 
-    return None
+    return next_file, assert_can_use_range
 
   def _is_file_useable(self, file: _File):
     if file.complated_length >= file.target_length:
@@ -221,6 +273,9 @@ class Serial:
   def _split_file(self, file: _File):
     task = file.task
     assert task is not None
+    if not task.check_can_use_range():
+      return None
+
     splitted_offset: int = task.update_end(
       file.offset + task.complated_length + self._min_task_length - 1,
     )
