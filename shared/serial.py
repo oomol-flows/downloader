@@ -145,10 +145,37 @@ class Serial:
 
   # thread safe
   def stop_tasks(self):
-    self._stop_tasks(lambda _: True)
+    with self._files_lock:
+      self._stop_tasks(lambda _: True)
 
+  # thread safe
   def transform_to_full_file_downloading(self):
-    pass
+    with self._files_lock:
+      full_file: _File | None = None
+      full_file_name: str | None = None
+
+      def filter(file: _File) -> bool:
+        nonlocal full_file, full_file_name
+        task = file.task
+        if task is not None and task.promoise_is_full_task():
+          full_file = file
+          full_file_name = self.to_chunk_file(file.offset)
+          return False
+        return True
+
+      self._stop_tasks(filter)
+
+      for offset in sorted(list(self._search_chunks())):
+        chunk_name = self.to_chunk_file(offset)
+        if full_file_name != chunk_name:
+          chunk_path = os.path.join(self._base_path, chunk_name)
+          os.remove(chunk_path)
+
+      if full_file is None:
+        full_file = self._create_first_file()
+
+      self._files.clear()
+      self._files.append(full_file)
 
   def _fetch_meta(self):
     resp: requests.Response | None = None
@@ -177,17 +204,15 @@ class Serial:
     assert resp is not None
     raise Exception(f"Failed to fetch meta data: {resp.status_code} {resp.reason}")
 
-  # thread safe
-  def _stop_tasks(self, filter: Callable[[Task], bool]):
-    with self._files_lock:
-      for file in self._files:
-        with file.task_lock:
+  def _stop_tasks(self, filter: Callable[[_File], bool]):
+    for file in self._files:
+      with file.task_lock:
+        if filter(file):
           task: Task | None = file.task
           if task is None:
             continue
-          if filter(task):
-            task.stop()
-            file.task = None
+          task.stop()
+          file.task = None
 
   def _no_range_file(self) -> _File | None:
     file = self._files[0]
