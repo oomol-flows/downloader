@@ -6,6 +6,7 @@ import time
 import requests
 
 from typing import Callable, Generator, Mapping, MutableMapping
+from math import floor
 from threading import Lock
 from dataclasses import dataclass
 from .task import Task, Timeout
@@ -276,9 +277,9 @@ class Serial:
     if not task.check_can_use_range():
       return None
 
-    splitted_offset: int = task.update_end(
-      file.offset + task.complated_length + self._min_task_length - 1,
-    )
+    splitted_start: int = file.offset + task.complated_length
+    splitted_offset: int = floor((file.target_length - splitted_start) / 2)
+    splitted_offset = task.update_end(splitted_offset)
     new_offset = splitted_offset + 1
     new_end = file.offset + file.target_length
     if new_offset > new_end:
