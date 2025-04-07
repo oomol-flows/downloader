@@ -118,7 +118,7 @@ class Task:
             result = TaskResult.STOPPED
             break
 
-          # 在这个循环将下载偏移是 begin_offset ~- end_offset 之间的内容
+          # 在这个循环将下载偏移是 begin_offset ~ end_offset 之间的内容
           begin_offset = self._offset
           end_offset = self._offset + len(chunk) - 1
 

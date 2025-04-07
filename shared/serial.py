@@ -57,7 +57,9 @@ class Serial:
     self._files_lock: Lock = Lock()
     self._etag: str | None = etag
     self._content_length: int = content_length
-    self._enable_range: bool = range_uesable
+    # 仅仅表示 Meta 信息显示允许 range 操作，但某些 server 依然会在发起 GET 请求后忽略 range 请求
+    # 这需要在 task 中的 resp 二次确认才能最终确定
+    self._meta_enable_range: bool = range_uesable
 
   @property
   def etag(self) -> str | None:
@@ -76,7 +78,7 @@ class Serial:
     return f"{self._name}.{offset}{self._ext_name}.{_DOWNALODING}"
 
   def load_buffer(self):
-    if self._enable_range:
+    if self._meta_enable_range:
       for offset in self._search_chunks():
         chunk_name = self.to_chunk_file(offset)
         chunk_path = os.path.join(self._base_path, chunk_name)
@@ -124,11 +126,13 @@ class Serial:
           task = file.task
         task.stop()
 
+  # thread safe
   def get_task(self) -> Task | None:
     with self._files_lock:
       file: _File | None
-      if self._enable_range:
-        file = self._select_or_split_next_file()
+      assert_can_use_range: bool = False
+      if self._meta_enable_range:
+        file, assert_can_use_range = self._select_or_split_next_file()
       else:
         file = self._no_range_file()
 
@@ -141,6 +145,7 @@ class Serial:
         end=file.offset + file.target_length - 1,
         completed_bytes=file.complated_length,
         total_bytes=self._content_length,
+        assert_can_use_range=assert_can_use_range,
         headers=self._headers,
         cookies=self._cookies,
         on_finished=lambda bytes_count: self._on_task_finished(file, bytes_count),
@@ -182,29 +187,35 @@ class Serial:
       return None
     return file
 
-  def _select_or_split_next_file(self) -> _File | None:
+  def _select_or_split_next_file(self) -> tuple[_File | None, bool]:
     def is_file_useable_thread_safe(file: _File):
       with file.task_lock:
         return self._is_file_useable(file)
 
-    useable_files = [f for f in self._files if is_file_useable_thread_safe(f)]
-    useable_files.sort(key=lambda f: (
-      0 if f.task is None else 1,
-      - (f.target_length - f.complated_length),
-    ))
+    def file_key(index: int, file: _File) -> tuple[int, int, int]:
+      first: int = 0
+      second: int = - (file.target_length - file.complated_length)
+      task = file.task
+      if task is not None:
+        first = 1 if task.know_can_use_range else 2
+      return first, second, index
 
-    for file in useable_files:
+    useable_files = [f for f in self._files if is_file_useable_thread_safe(f)]
+    useable_file_keys = [file_key(i, f) for i, f in enumerate(useable_files)]
+
+    for _, _, i in sorted(useable_file_keys): # know_can_use_range 会中途变化，需要锁定
+      file = useable_files[i]
       with file.task_lock:
         if not self._is_file_useable(file):
           # 两次上锁之间，状态可能发生变化
           continue
         if file.task is None:
-          return file
+          return file, False
         splitted_file = self._split_file(file)
         if splitted_file is not None:
-          return splitted_file
+          return splitted_file, file.task.check_can_use_range()
 
-    return None
+    return None, False
 
   def _is_file_useable(self, file: _File):
     if file.complated_length >= file.target_length:
