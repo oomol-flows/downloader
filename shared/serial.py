@@ -10,6 +10,7 @@ from math import floor
 from threading import Lock
 from dataclasses import dataclass
 from .task import Task, Timeout
+from .retry import Retry
 
 
 _DOWNALODING = "downloading"
@@ -43,11 +44,13 @@ class Serial:
     self._base_path: str = base_path
     self._ext_name: str = ext_name # includes dot prefix
     self._timeout: Timeout | None = timeout
-    self._retry_times: int = retry_times
-    self._retry_sleep: float = retry_sleep
     self._min_task_length: int = min_task_length
     self._headers: Mapping[str, str | bytes | None] | None = headers
     self._cookies: MutableMapping[str, str] | None = cookies
+    self._retry: Retry = Retry(
+      retry_times=retry_times,
+      retry_sleep=retry_sleep,
+    )
 
     assert min_task_length > 1
     content_length, etag, range_uesable = self._fetch_meta()
@@ -179,31 +182,22 @@ class Serial:
       self._files.append(full_file)
 
   def _fetch_meta(self):
-    resp: requests.Response | None = None
-    for i in range(self._retry_times + 1):
-      resp = requests.head(
+    resp = self._retry.request(
+      request=lambda: requests.head(
         url=self._url,
         headers=self._headers,
         cookies=self._cookies,
         timeout=self._timeout,
-      )
-      if resp.status_code == 200:
-        content_length = resp.headers.get("Content-Length")
-        etag = resp.headers.get("ETag")
-        range_uesable = resp.headers.get("Accept-Ranges") == "bytes"
+      ),
+    )
+    content_length = resp.headers.get("Content-Length")
+    etag = resp.headers.get("ETag")
+    range_uesable = resp.headers.get("Accept-Ranges") == "bytes"
 
-        if content_length is not None:
-          content_length = int(content_length)
-        return content_length, etag, range_uesable
+    if content_length is not None:
+      content_length = int(content_length)
 
-      elif resp.status_code in (408, 429, 502, 503, 504):
-        if self._retry_sleep > 0.0 and i < self._retry_times: # not last times
-          time.sleep(self._retry_sleep)
-      else:
-        break
-
-    assert resp is not None
-    raise Exception(f"Failed to fetch meta data: {resp.status_code} {resp.reason}")
+    return content_length, etag, range_uesable
 
   def _stop_tasks(self, filter: Callable[[_File], bool]):
     for file in self._files:

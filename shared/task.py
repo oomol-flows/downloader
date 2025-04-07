@@ -4,6 +4,7 @@ import requests
 from typing import Any, Callable, Mapping, MutableMapping
 from enum import auto, Enum
 from threading import Lock, Event
+from .retry import Retry
 
 
 Timeout = float | tuple[float, float] | tuple[float, None]
@@ -114,14 +115,19 @@ class Task:
 
     try:
       result: TaskResult = TaskResult.SUCCESS
-      with requests.Session().get(
-        stream=True,
-        url=self._url,
-        headers=self._headers,
-        cookies=self._cookies,
-        timeout=timeout,
+      retry = Retry(
+        retry_times=5,
+        retry_sleep=0.6,
+      )
+      with retry.request(
+        request=lambda: requests.Session().get(
+          stream=True,
+          url=self._url,
+          headers=self._headers,
+          cookies=self._cookies,
+          timeout=timeout,
+        ),
       ) as resp:
-        resp.raise_for_status()
         enable_use_range = self._check_enable_range(resp)
         if self._must_use_range and not enable_use_range:
           raise AssertEnableRangeError(self._url)
