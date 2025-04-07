@@ -24,6 +24,7 @@ class Task:
   def __init__(
       self,
       url: str,
+      retry: Retry,
       start: int,
       end: int,
       completed_bytes: int,
@@ -35,12 +36,13 @@ class Task:
     ) -> None:
 
     self._url: str = url
-    self._on_finished: Callable[[int], Any] = on_finished
-    self._headers: Mapping[str, str | bytes | None] | None = headers
-    self._cookies: MutableMapping[str, str] | None = cookies
+    self._retry: Retry = retry
     self._start: int = start
     self._end: int = end
     self._total_bytes: int = total_bytes
+    self._on_finished: Callable[[int], Any] = on_finished
+    self._headers: Mapping[str, str | bytes | None] | None = headers
+    self._cookies: MutableMapping[str, str] | None = cookies
     assert start >= 0
     assert start <= end < total_bytes
 
@@ -115,11 +117,8 @@ class Task:
 
     try:
       result: TaskResult = TaskResult.SUCCESS
-      retry = Retry(
-        retry_times=5,
-        retry_sleep=0.6,
-      )
-      with retry.request(
+
+      with self._retry.request(
         request=lambda: requests.Session().get(
           stream=True,
           url=self._url,

@@ -136,6 +136,7 @@ class Serial:
       with file.task_lock:
         file.task = Task(
           url=self._url,
+          retry=self._retry,
           start=file.offset,
           end=file.offset + file.target_length - 1,
           completed_bytes=file.complated_length,
