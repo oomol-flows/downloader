@@ -22,6 +22,7 @@ class Task:
       end: int,
       completed_bytes: int,
       total_bytes: int,
+      assert_can_use_range: bool,
       on_finished: Callable[[int], Any],
       headers: Mapping[str, str | bytes | None] | None = None,
       cookies: MutableMapping[str, str] | None = None,
@@ -41,6 +42,12 @@ class Task:
     self._stopped_event: Event = Event()
     self._offset: int = start + completed_bytes
     self._hold_offset: int = start - 1
+    self._can_use_range: bool = False
+    self._know_can_use_range_event: Event = Event()
+
+    if assert_can_use_range:
+      self._can_use_range = True
+      self._know_can_use_range_event.set()
 
   @property
   def start(self) -> int:
@@ -54,6 +61,15 @@ class Task:
   @property
   def complated_length(self) -> int:
     return self._offset - self._start
+
+  @property
+  def know_can_use_range(self) -> bool:
+    return self._know_can_use_range_event.is_set()
+
+  # will pendding by self.do()
+  def check_can_use_range(self) -> bool:
+    self._know_can_use_range_event.wait()
+    return self._can_use_range
 
   def stop(self):
     self._stopped_event.set()
@@ -73,12 +89,11 @@ class Task:
     ) -> TaskResult:
 
     written_count = 0
-    use_range = (self._offset > 0 or self._end < self._total_bytes - 1)
+    must_use_range = (self._offset > 0 or self._end < self._total_bytes - 1)
     headers: Mapping[str, str | bytes | None] = {**self._headers} if self._headers else {}
 
-    if use_range:
-      with self._end_lock:
-        headers["Range"] = f"{self._offset}-{self._end}"
+    with self._end_lock:
+      headers["Range"] = f"{self._offset}-{self._end}"
 
     try:
       result: TaskResult = TaskResult.SUCCESS
@@ -90,8 +105,13 @@ class Task:
         timeout=timeout,
       ) as resp:
         resp.raise_for_status()
-        if use_range:
-          self.assert_range_response(resp)
+        enable_use_range = self._check_enable_range(resp)
+        if must_use_range and not enable_use_range:
+          raise RuntimeError("Server does not support range requests")
+
+        if enable_use_range:
+          self._can_use_range = True
+        self._know_can_use_range_event.set()
 
         for chunk in resp.iter_content(chunk_size=chunk_size):
           if self._stopped_event.is_set():
@@ -127,10 +147,11 @@ class Task:
     finally:
       self._on_finished(written_count)
 
-  def assert_range_response(self, resp: requests.Response):
+  def _check_enable_range(self, resp: requests.Response) -> bool:
     content_range = resp.headers.get("Content-Range")
     content_length = resp.headers.get("Content-Length")
     if content_range != f"bytes {self._offset}-{self._end}/{self._total_bytes}":
-      raise RuntimeError(f"Invalid Content-Range: {content_range}")
+      return False
     if content_length != f"{self._total_bytes}":
-      raise RuntimeError(f"Invalid Content-Length: {content_length}")
+      return False
+    return True
