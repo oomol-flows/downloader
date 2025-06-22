@@ -1,14 +1,11 @@
-from shared.task import Task
-
-
 import os
-import time
 import requests
 
 from typing import Callable, Generator, Mapping, MutableMapping
 from math import floor
 from threading import Lock
 from dataclasses import dataclass
+from shared.task import Task
 from .task import Task, Timeout
 from .retry import Retry
 
@@ -51,7 +48,6 @@ class Serial:
       retry_times=retry_times,
       retry_sleep=retry_sleep,
     )
-
     assert min_task_length > 1
     content_length, etag, range_uesable = self._fetch_meta()
     if content_length is None:

@@ -1,6 +1,3 @@
-from requests.models import Response
-
-
 from typing import Callable
 from time import sleep
 from requests import exceptions, Response
@@ -35,10 +32,10 @@ class Retry:
       if i < self._retry_times:
         sleep(self._retry_sleep)
 
-    if last_response is not None:
-      last_response.raise_for_status()
-
     if last_error is not None:
       raise last_error
+
+    if last_response is not None:
+      last_response.raise_for_status()
 
     raise RuntimeError("request failed")
