@@ -49,6 +49,7 @@ inputs_def:
     json_schema:
       type: integer
       minimum: 1
+    value: 1
   - handle: window_width
     json_schema:
       type: integer
