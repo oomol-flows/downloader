@@ -1,1 +1,93 @@
-nodes: []
+nodes:
+  - node_id: file-downloader#1
+    title: "Download a file #1"
+    inputs_from:
+      - handle: url
+      - handle: saved_path
+        value: null
+      - handle: if_existing
+        value: override
+      - handle: threads_count
+        value: 1
+      - handle: headers
+        value:
+          {}
+      - handle: cookies
+        value:
+          {}
+      - handle: window_width
+        value: 7
+      - handle: failure_ladder
+        value:
+          - 5
+      - handle: min_segment_length
+        value: 1048576
+      - handle: once_fetch_size
+        value: 16384
+      - handle: timeout
+        value: 30
+      - handle: retry_times
+        value: 0
+      - handle: retry_sleep
+        value: 0
+    subflow: self::file-downloader
+  - node_id: folder-downloader#1
+    title: "Download to a folder (multi-files) #1"
+    inputs_from:
+      - handle: files
+      - handle: saved_folder
+        value: null
+      - handle: found_existing
+        value: override
+      - handle: download_fail
+        value: error
+      - handle: threads_count
+        value: 1
+      - handle: headers
+        value:
+          {}
+      - handle: cookies
+        value:
+          {}
+      - handle: window_width
+        value: 7
+      - handle: failure_ladder
+        value:
+          - 5
+      - handle: min_segment_length
+        value: 1048576
+      - handle: once_fetch_size
+        value: 16384
+      - handle: timeout
+        value: 30
+      - handle: retry_times
+        value: 0
+      - handle: retry_sleep
+        value: 0
+    subflow: self::folder-downloader
+  - node_id: files-downloader#1
+    title: "Download files #1"
+    inputs_from:
+      - handle: tasks
+      - handle: found_existing
+        value: override
+      - handle: download_fail
+        value: error
+      - handle: threads_count
+        value: 1
+      - handle: window_width
+        value: 7
+      - handle: failure_ladder
+        value:
+          - 5
+      - handle: min_segment_length
+        value: 1048576
+      - handle: once_fetch_size
+        value: 16384
+      - handle: timeout
+        value: 30
+      - handle: retry_times
+        value: 0
+      - handle: retry_sleep
+        value: 0
+    task: self::files-downloader

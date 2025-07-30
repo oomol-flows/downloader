@@ -4,11 +4,18 @@
       "contentWidth": 444.2918145734796,
       "rfNode": {
         "position": {
-          "x": 1355.3259271678337,
-          "y": -130.01510239200474
+          "x": 1201.245204719945,
+          "y": -100
         }
       },
       "sections": {
+        "inputs": {
+          "collapsed": {
+            "tasks": {
+              "[]": true
+            }
+          }
+        },
         "outputs": {
           "collapsed": {
             "on_task_completed": {
@@ -25,23 +32,20 @@
       }
     },
     "+python#1": {
-      "contentWidth": 519.928676875945,
+      "contentWidth": 450,
       "rfNode": {
         "position": {
-          "x": 626.6905876748565,
-          "y": 268.7338122848635
+          "x": 589.5319610398487,
+          "y": -68.23659374438171
         }
       },
       "sections": {
         "inputs": {
           "collapsed": {
-            "files": {
+            "cookies": {
               "[]": true
             },
             "headers": {
-              "[]": true
-            },
-            "cookies": {
               "[]": true
             }
           }
@@ -50,21 +54,30 @@
           "cardCollapsed": true
         }
       }
+    },
+    "+python#2": {
+      "contentWidth": 450,
+      "rfNode": {
+        "position": {
+          "x": 1701.8453483394085,
+          "y": -100
+        }
+      }
     }
   },
   "pseudoNodes": {
     "input": {
       "rfNode": {
         "position": {
-          "x": 12.738709677419308,
-          "y": 169.11280116419644
+          "x": 0,
+          "y": -100
         }
       },
       "sections": {
         "subflowInput": {
           "groupCollapsed": {
-            "Strategy": true,
-            "Connection": true
+            "Connection": true,
+            "Strategy": true
           }
         }
       }
@@ -72,14 +85,13 @@
     "output": {
       "rfNode": {
         "position": {
-          "x": 1917.9040725666443,
-          "y": 364.98489760799526
+          "x": 2228.032331011155,
+          "y": 224
         }
       },
       "sections": {
         "subflowOutput": {
           "groupCollapsed": {
-            "Results": true,
             "Events": true
           }
         }

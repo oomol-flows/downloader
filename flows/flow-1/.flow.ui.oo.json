@@ -1,0 +1,74 @@
+{
+  "nodes": {
+    "file-downloader#1": {
+      "rfNode": {
+        "position": {
+          "x": 140.00521850585938,
+          "y": 164.00130462646484
+        }
+      },
+      "sections": {
+        "inputs": {
+          "groupCollapsed": {
+            "Strategy": true,
+            "Connection": true
+          }
+        },
+        "outputs": {
+          "groupCollapsed": {
+            "Events": true
+          }
+        }
+      }
+    },
+    "folder-downloader#1": {
+      "rfNode": {
+        "position": {
+          "x": 356.0052185058594,
+          "y": 618.0013046264648
+        }
+      },
+      "sections": {
+        "inputs": {
+          "collapsed": {
+            "files": {
+              "[]": true
+            }
+          },
+          "groupCollapsed": {
+            "Strategy": true,
+            "Connection": true
+          }
+        },
+        "outputs": {
+          "groupCollapsed": {
+            "Results": true,
+            "Events": true
+          }
+        }
+      }
+    },
+    "files-downloader#1": {
+      "contentWidth": 444.2918145734796,
+      "rfNode": {
+        "position": {
+          "x": 733.9999767541893,
+          "y": 192.6679666572146
+        }
+      },
+      "sections": {
+        "inputs": {
+          "groupCollapsed": {
+            "Strategy": true,
+            "Connection": true
+          }
+        },
+        "outputs": {
+          "groupCollapsed": {
+            "Events": true
+          }
+        }
+      }
+    }
+  }
+}

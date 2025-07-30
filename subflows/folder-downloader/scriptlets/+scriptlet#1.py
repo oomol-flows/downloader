@@ -4,7 +4,7 @@ from oocana import Context
 #region generated meta
 import typing
 class Inputs(typing.TypedDict):
-  files: dict
+  files: list[dict]
   saved_folder: str | None
   headers: dict
   cookies: dict

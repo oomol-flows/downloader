@@ -19,8 +19,7 @@ inputs_def:
             type: object
           cookies:
             type: object
-    value:
-      []
+    nullable: false
   - group: Strategy
     collapsed: true
   - handle: found_existing
