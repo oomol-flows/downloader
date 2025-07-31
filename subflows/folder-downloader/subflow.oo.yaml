@@ -1,0 +1,434 @@
+inputs_def:
+  - handle: files
+    json_schema:
+      type: array
+      items:
+        type: object
+        additionalProperties: false
+        properties:
+          url:
+            type: string
+          name:
+            type: string
+    nullable: false
+    executor_name: python
+  - handle: saved_folder
+    json_schema:
+      type: string
+      ui:widget: dir
+    value:
+    nullable: true
+    executor_name: python
+  - group: Strategy
+    collapsed: true
+  - handle: found_existing
+    json_schema:
+      enum:
+        - ignore
+        - override
+      ui:options:
+        labels:
+          - Ignore
+          - Override
+    value: override
+    nullable: false
+    executor_name: python
+  - handle: download_fail
+    json_schema:
+      enum:
+        - continue
+        - error
+      ui:options:
+        labels:
+          - Continue
+          - Error
+    value: error
+    nullable: false
+    executor_name: python
+  - handle: clean_saved_folder
+    json_schema:
+      type: boolean
+    executor_name: python
+    value: false
+  - group: Connection
+    collapsed: true
+  - handle: threads_count
+    json_schema:
+      type: integer
+      minimum: 1
+    value: 1
+    nullable: false
+    executor_name: python
+  - handle: headers
+    json_schema:
+      type: object
+      properties:
+        {}
+    value:
+      {}
+    nullable: false
+    executor_name: python
+  - handle: cookies
+    json_schema:
+      type: object
+      properties:
+        {}
+    value:
+      {}
+    nullable: false
+    executor_name: python
+  - handle: window_width
+    json_schema:
+      type: integer
+    value: 7
+    nullable: false
+    executor_name: python
+  - handle: failure_ladder
+    json_schema:
+      type: array
+      items:
+        type: integer
+        minimum: 1
+    value:
+      - 5
+    nullable: false
+    executor_name: python
+  - handle: min_segment_length
+    json_schema:
+      type: integer
+      minimum: 1
+    value: 1048576
+    nullable: false
+    executor_name: python
+  - handle: once_fetch_size
+    json_schema:
+      type: integer
+      minimum: 1
+    value: 16384
+    nullable: false
+    executor_name: python
+  - handle: timeout
+    json_schema:
+      type: number
+      minimum: 0
+    value: 30
+    nullable: false
+    executor_name: python
+  - handle: retry_times
+    json_schema:
+      type: integer
+      minimum: 0
+    value: 0
+    nullable: false
+    executor_name: python
+  - handle: retry_sleep
+    json_schema:
+      type: number
+      minimum: 0
+    value: 0
+    nullable: false
+    executor_name: python
+outputs_def:
+  - handle: saved_folder
+    json_schema:
+      type: string
+      ui:widget: dir
+    nullable: false
+    executor_name: python
+  - group: Results
+    collapsed: true
+  - handle: success_paths
+    json_schema:
+      type: array
+      items:
+        type: string
+        ui:widget: save
+    nullable: false
+    executor_name: python
+  - handle: failed_urls
+    json_schema:
+      type: array
+      items:
+        type: string
+    nullable: false
+    executor_name: python
+  - group: Events
+    collapsed: true
+  - handle: on_task_completed
+    json_schema:
+      type: object
+      additionalProperties: false
+      properties:
+        saved_path:
+          type: string
+          ui:widget: save
+        url:
+          type: string
+        headers:
+          type: object
+        cookies:
+          type: object
+    nullable: false
+    executor_name: python
+  - handle: on_task_failed
+    json_schema:
+      type: object
+      additionalProperties: false
+      properties:
+        saved_path:
+          type: string
+          ui:widget: save
+        url:
+          type: string
+        headers:
+          type: object
+        cookies:
+          type: object
+        error:
+          type: string
+    nullable: false
+    executor_name: python
+  - handle: on_task_failed_with_retry_error
+    json_schema:
+      type: object
+      additionalProperties: false
+      properties:
+        saved_path:
+          type: string
+          ui:widget: save
+        url:
+          type: string
+        headers:
+          type: object
+        cookies:
+          type: object
+        error:
+          type: string
+    nullable: false
+    executor_name: python
+nodes:
+  - node_id: files-downloader#1
+    title: "Download files #1"
+    inputs_from:
+      - handle: tasks
+        value:
+          []
+        from_node:
+          - node_id: +python#1
+            output_handle: tasks
+      - handle: found_existing
+        value: override
+        from_flow:
+          - input_handle: found_existing
+      - handle: download_fail
+        value: error
+        from_flow:
+          - input_handle: download_fail
+      - handle: threads_count
+        value: 1
+        from_flow:
+          - input_handle: threads_count
+      - handle: window_width
+        value: 7
+        from_flow:
+          - input_handle: window_width
+      - handle: failure_ladder
+        value:
+          - 5
+        from_flow:
+          - input_handle: failure_ladder
+      - handle: min_segment_length
+        value: 1048576
+        from_flow:
+          - input_handle: min_segment_length
+      - handle: once_fetch_size
+        value: 16384
+        from_flow:
+          - input_handle: once_fetch_size
+      - handle: timeout
+        value: 30
+        from_flow:
+          - input_handle: timeout
+      - handle: retry_times
+        value: 0
+        from_flow:
+          - input_handle: retry_times
+      - handle: retry_sleep
+        value: 0
+        from_flow:
+          - input_handle: retry_sleep
+    task: self::files-downloader
+    progress_weight: 100
+  - node_id: +python#1
+    title: "merge as tasks"
+    icon: ":logos:python:"
+    task:
+      ui:
+        default_width: 450
+      inputs_def:
+        - handle: files
+          json_schema:
+            type: array
+            items:
+              type: object
+              additionalProperties: false
+              properties:
+                url:
+                  type: string
+                name:
+                  type: string
+          nullable: false
+        - handle: saved_folder
+          json_schema:
+            type: string
+            ui:widget: dir
+          nullable: true
+        - handle: clean_saved_folder
+          json_schema:
+            type: boolean
+          nullable: false
+        - handle: headers
+          json_schema:
+            type: object
+            properties:
+              {}
+        - handle: cookies
+          json_schema:
+            type: object
+            properties:
+              {}
+      outputs_def:
+        - handle: tasks
+          json_schema:
+            type: array
+            items:
+              type: object
+              additionalProperties: false
+              properties:
+                file:
+                  type: string
+                  ui:widget: save
+                url:
+                  type: string
+                headers:
+                  type: object
+                cookies:
+                  type: object
+          nullable: false
+        - handle: saved_folder
+          json_schema:
+            type: string
+            ui:widget: dir
+      executor:
+        name: python
+        options:
+          entry: scriptlets/+scriptlet#1.py
+    inputs_from:
+      - handle: saved_folder
+        value:
+        from_flow:
+          - input_handle: saved_folder
+      - handle: headers
+        value:
+          {}
+        from_flow:
+          - input_handle: headers
+      - handle: cookies
+        value:
+          {}
+        from_flow:
+          - input_handle: cookies
+      - handle: files
+        from_flow:
+          - input_handle: files
+      - handle: clean_saved_folder
+        value: false
+        from_flow:
+          - input_handle: clean_saved_folder
+  - node_id: +python#2
+    title: "PLL"
+    icon: ":logos:python:"
+    task:
+      ui:
+        default_width: 450
+      inputs_def:
+        - handle: saved_folder
+          json_schema:
+            type: string
+            ui:widget: dir
+          nullable: false
+        - handle: success_paths
+          json_schema:
+            type: array
+            items:
+              type: string
+              ui:widget: save
+          nullable: false
+        - handle: failed_urls
+          json_schema:
+            type: array
+            items:
+              type: string
+          nullable: false
+      outputs_def:
+        - handle: saved_folder
+          json_schema:
+            type: string
+            ui:widget: dir
+          nullable: false
+        - handle: success_paths
+          json_schema:
+            type: array
+            items:
+              type: string
+              ui:widget: save
+          nullable: false
+        - handle: failed_urls
+          json_schema:
+            type: array
+            items:
+              type: string
+          nullable: false
+      executor:
+        name: python
+        options:
+          entry: scriptlets/+scriptlet#2.py
+    inputs_from:
+      - handle: saved_folder
+        from_node:
+          - node_id: +python#1
+            output_handle: saved_folder
+      - handle: success_paths
+        from_node:
+          - node_id: files-downloader#1
+            output_handle: success_paths
+      - handle: failed_urls
+        from_node:
+          - node_id: files-downloader#1
+            output_handle: failed_urls
+title: Download to a folder (multi-files)
+outputs_from:
+  - handle: success_paths
+    from_node:
+      - node_id: +python#2
+        output_handle: success_paths
+  - handle: saved_folder
+    from_node:
+      - node_id: +python#2
+        output_handle: saved_folder
+  - handle: failed_urls
+    from_node:
+      - node_id: +python#2
+        output_handle: failed_urls
+  - handle: on_task_completed
+    from_node:
+      - node_id: files-downloader#1
+        output_handle: on_task_completed
+  - handle: on_task_failed
+    from_node:
+      - node_id: files-downloader#1
+        output_handle: on_task_failed
+  - handle: on_task_failed_with_retry_error
+    from_node:
+      - node_id: files-downloader#1
+        output_handle: on_task_failed_with_retry_error

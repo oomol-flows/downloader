@@ -1,0 +1,154 @@
+executor:
+  name: python
+  options:
+    entry: __init__.py
+inputs_def:
+  - handle: tasks
+    json_schema:
+      type: array
+      items:
+        type: object
+        additionalProperties: false
+        properties:
+          file:
+            type: string
+            ui:widget: file
+          url:
+            type: string
+          headers:
+            type: object
+          cookies:
+            type: object
+    nullable: false
+  - group: Strategy
+    collapsed: true
+  - handle: found_existing
+    json_schema:
+      enum:
+        - ignore
+        - override
+      ui:options:
+        labels:
+          - Ignore
+          - Override
+    value: override
+  - handle: download_fail
+    json_schema:
+      enum:
+        - continue
+        - error
+      ui:options:
+        labels:
+          - Continue
+          - Error
+    value: error
+  - group: Connection
+    collapsed: true
+  - handle: threads_count
+    json_schema:
+      type: integer
+      minimum: 1
+    value: 1
+  - handle: window_width
+    json_schema:
+      type: integer
+    value: 7
+  - handle: failure_ladder
+    json_schema:
+      type: array
+      items:
+        type: integer
+        minimum: 1
+    value:
+      - 5
+  - handle: min_segment_length
+    json_schema:
+      type: integer
+      minimum: 1
+    value: 1048576
+  - handle: once_fetch_size
+    json_schema:
+      type: integer
+      minimum: 1
+    value: 16384
+  - handle: timeout
+    json_schema:
+      type: number
+      minimum: 0
+    value: 30
+  - handle: retry_times
+    json_schema:
+      type: integer
+      minimum: 0
+    value: 0
+  - handle: retry_sleep
+    json_schema:
+      type: number
+      minimum: 0
+    value: 0
+outputs_def:
+  - handle: success_paths
+    json_schema:
+      type: array
+      items:
+        type: string
+        ui:widget: save
+  - handle: failed_urls
+    json_schema:
+      type: array
+      items:
+        type: string
+  - group: Events
+    collapsed: true
+  - handle: on_task_completed
+    json_schema:
+      type: object
+      additionalProperties: false
+      properties:
+        saved_path:
+          type: string
+          ui:widget: save
+        url:
+          type: string
+        headers:
+          type: object
+        cookies:
+          type: object
+    nullable: false
+  - handle: on_task_failed
+    json_schema:
+      type: object
+      additionalProperties: false
+      properties:
+        saved_path:
+          type: string
+          ui:widget: save
+        url:
+          type: string
+        headers:
+          type: object
+        cookies:
+          type: object
+        error:
+          type: string
+    nullable: false
+  - handle: on_task_failed_with_retry_error
+    json_schema:
+      type: object
+      additionalProperties: false
+      properties:
+        saved_path:
+          type: string
+          ui:widget: save
+        url:
+          type: string
+        headers:
+          type: object
+        cookies:
+          type: object
+        error:
+          type: string
+    nullable: false
+title: Download files
+ui:
+  default_width: 444.2918145734796

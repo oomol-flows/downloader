@@ -1,0 +1,98 @@
+{
+  "nodes": {
+    "files-downloader#1": {
+      "contentWidth": 444.2918145734796,
+      "rfNode": {
+        "position": {
+          "x": 1355.3259271678337,
+          "y": -130.01510239200474
+        }
+      },
+      "sections": {
+        "outputs": {
+          "collapsed": {
+            "on_task_completed": {
+              "[]": true
+            },
+            "on_task_failed": {
+              "[]": true
+            },
+            "on_task_failed_with_retry_error": {
+              "[]": true
+            }
+          }
+        }
+      }
+    },
+    "+python#1": {
+      "contentWidth": 519.928676875945,
+      "rfNode": {
+        "position": {
+          "x": 627.8949354486195,
+          "y": 244.64685680960105
+        }
+      },
+      "sections": {
+        "inputs": {
+          "collapsed": {
+            "files": {
+              "[]": true
+            },
+            "headers": {
+              "[]": true
+            },
+            "cookies": {
+              "[]": true
+            }
+          }
+        },
+        "scriptlet": {
+          "cardCollapsed": true
+        }
+      }
+    },
+    "+python#2": {
+      "contentWidth": 515.025974908962,
+      "rfNode": {
+        "position": {
+          "x": 1979.1371425895659,
+          "y": 294.7500685321055
+        }
+      }
+    }
+  },
+  "pseudoNodes": {
+    "input": {
+      "rfNode": {
+        "position": {
+          "x": 12.738709677419308,
+          "y": 169.11280116419644
+        }
+      },
+      "sections": {
+        "subflowInput": {
+          "groupCollapsed": {
+            "Strategy": true,
+            "Connection": true
+          }
+        }
+      }
+    },
+    "output": {
+      "rfNode": {
+        "position": {
+          "x": 2741.772430498552,
+          "y": 479.9036224130442
+        }
+      },
+      "sections": {
+        "subflowOutput": {
+          "groupCollapsed": {
+            "Results": true,
+            "Events": true
+          }
+        }
+      }
+    }
+  }
+}

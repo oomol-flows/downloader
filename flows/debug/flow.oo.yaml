@@ -1,0 +1,92 @@
+nodes:
+  - node_id: +value#1
+    title: "Value #1"
+    values:
+      - handle: urls
+        json_schema:
+          type: array
+          items:
+            type: string
+        value:
+          - https://images.unsplash.com/photo-1750688650446-38775b7e69dc?q=80&w=3024&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D
+          - https://images.unsplash.com/photo-1753298999092-0df8a80bfe34?q=80&w=2940&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D
+          - https://google.com/fuckyou.png
+          - https://plus.unsplash.com/premium_photo-1751667124857-32b5a1c63d8a?q=80&w=1482&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D
+          - https://images.unsplash.com/photo-1749226707461-de8a7da679fd?q=80&w=2574&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D
+  - node_id: +python#1
+    title: "Python #1"
+    icon: ":logos:python:"
+    task:
+      ui:
+        default_width: 450
+      inputs_def:
+        - handle: urls
+          json_schema:
+            type: array
+            items:
+              type: string
+          value:
+            - https://images.unsplash.com/photo-1750688650446-38775b7e69dc?ixlib=rb-4.1.0&q=85&fm=jpg&crop=entropy&cs=srgb
+      outputs_def:
+        - handle: files
+          json_schema:
+            type: array
+            items:
+              type: object
+              additionalProperties: false
+      executor:
+        name: python
+        options:
+          entry: scriptlets/+scriptlet#1.py
+    inputs_from:
+      - handle: urls
+        from_node:
+          - node_id: +value#1
+            output_handle: urls
+  - node_id: folder-downloader#2
+    title: "Download to a folder (multi-files) #2"
+    inputs_from:
+      - handle: files
+        from_node:
+          - node_id: +python#1
+            output_handle: files
+      - handle: saved_folder
+        value: /oomol-driver/downloads/download_tmp
+      - handle: found_existing
+        value: ignore
+      - handle: download_fail
+        value: continue
+      - handle: threads_count
+        value: 1
+      - handle: headers
+        value:
+          {}
+      - handle: cookies
+        value:
+          {}
+      - handle: window_width
+        value: 7
+      - handle: failure_ladder
+        value:
+          - 5
+      - handle: min_segment_length
+        value: 1048576
+      - handle: once_fetch_size
+        value: 16384
+      - handle: timeout
+        value: 30
+      - handle: retry_times
+        value: 0
+      - handle: retry_sleep
+        value: 0
+      - handle: clean_saved_folder
+        value: false
+    subflow: self::folder-downloader
+  - node_id: images_preview#1
+    title: "Images preview #1"
+    inputs_from:
+      - handle: images
+        from_node:
+          - node_id: folder-downloader#2
+            output_handle: success_paths
+    task: oomol-preview::images_preview
