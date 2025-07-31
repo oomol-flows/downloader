@@ -6,7 +6,7 @@ from oocana import Context
 #region generated meta
 import typing
 class Inputs(typing.TypedDict):
-  tasks: list[dict]
+  tasks: list[typing.Any]
   found_existing: typing.Literal["ignore", "override"]
   download_fail: typing.Literal["continue", "error"]
   threads_count: int

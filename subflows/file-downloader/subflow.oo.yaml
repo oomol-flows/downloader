@@ -247,7 +247,7 @@ nodes:
         from_flow:
           - input_handle: url
   - node_id: +python#2
-    title: "Python #2"
+    title: "Get the first path"
     icon: ":logos:python:"
     task:
       ui:

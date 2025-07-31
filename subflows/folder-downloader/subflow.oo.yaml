@@ -131,7 +131,7 @@ outputs_def:
     nullable: false
     executor_name: python
   - group: Results
-    collapsed: true
+    collapsed: false
   - handle: success_paths
     json_schema:
       type: array
@@ -148,7 +148,7 @@ outputs_def:
     nullable: false
     executor_name: python
   - group: Events
-    collapsed: true
+    collapsed: false
   - handle: on_task_completed
     json_schema:
       type: object
@@ -331,19 +331,80 @@ nodes:
       - handle: files
         from_flow:
           - input_handle: files
+  - node_id: +python#2
+    title: "PLL"
+    icon: ":logos:python:"
+    task:
+      ui:
+        default_width: 450
+      inputs_def:
+        - handle: saved_folder
+          json_schema:
+            type: string
+            ui:widget: dir
+          nullable: false
+        - handle: success_paths
+          json_schema:
+            type: array
+            items:
+              type: string
+              ui:widget: save
+          nullable: false
+        - handle: failed_urls
+          json_schema:
+            type: array
+            items:
+              type: string
+          nullable: false
+      outputs_def:
+        - handle: saved_folder
+          json_schema:
+            type: string
+            ui:widget: dir
+          nullable: false
+        - handle: success_paths
+          json_schema:
+            type: array
+            items:
+              type: string
+              ui:widget: save
+          nullable: false
+        - handle: failed_urls
+          json_schema:
+            type: array
+            items:
+              type: string
+          nullable: false
+      executor:
+        name: python
+        options:
+          entry: scriptlets/+scriptlet#2.py
+    inputs_from:
+      - handle: saved_folder
+        from_node:
+          - node_id: +python#1
+            output_handle: saved_folder
+      - handle: success_paths
+        from_node:
+          - node_id: files-downloader#1
+            output_handle: success_paths
+      - handle: failed_urls
+        from_node:
+          - node_id: files-downloader#1
+            output_handle: failed_urls
 title: Download to a folder (multi-files)
 outputs_from:
   - handle: success_paths
     from_node:
-      - node_id: files-downloader#1
+      - node_id: +python#2
         output_handle: success_paths
   - handle: saved_folder
     from_node:
-      - node_id: +python#1
+      - node_id: +python#2
         output_handle: saved_folder
   - handle: failed_urls
     from_node:
-      - node_id: files-downloader#1
+      - node_id: +python#2
         output_handle: failed_urls
   - handle: on_task_completed
     from_node:

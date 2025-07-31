@@ -6,19 +6,6 @@ inputs_def:
   - handle: tasks
     json_schema:
       type: array
-      items:
-        type: object
-        additionalProperties: false
-        properties:
-          saved_path:
-            type: string
-            ui:widget: save
-          url:
-            type: string
-          headers:
-            type: object
-          cookies:
-            type: object
     nullable: false
   - group: Strategy
     collapsed: true

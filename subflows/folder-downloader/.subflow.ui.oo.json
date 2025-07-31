@@ -50,6 +50,15 @@
           "cardCollapsed": true
         }
       }
+    },
+    "+python#2": {
+      "contentWidth": 515.025974908962,
+      "rfNode": {
+        "position": {
+          "x": 1979.1371425895659,
+          "y": 294.7500685321055
+        }
+      }
     }
   },
   "pseudoNodes": {
@@ -72,16 +81,8 @@
     "output": {
       "rfNode": {
         "position": {
-          "x": 1917.9040725666443,
-          "y": 364.98489760799526
-        }
-      },
-      "sections": {
-        "subflowOutput": {
-          "groupCollapsed": {
-            "Results": true,
-            "Events": true
-          }
+          "x": 2741.772430498552,
+          "y": 479.9036224130442
         }
       }
     }
