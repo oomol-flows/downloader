@@ -45,6 +45,11 @@ inputs_def:
     value: error
     nullable: false
     executor_name: python
+  - handle: clean_saved_folder
+    json_schema:
+      type: boolean
+    executor_name: python
+    value: false
   - group: Connection
     collapsed: true
   - handle: threads_count
@@ -131,7 +136,7 @@ outputs_def:
     nullable: false
     executor_name: python
   - group: Results
-    collapsed: false
+    collapsed: true
   - handle: success_paths
     json_schema:
       type: array
@@ -278,6 +283,10 @@ nodes:
             type: string
             ui:widget: dir
           nullable: true
+        - handle: clean_saved_folder
+          json_schema:
+            type: boolean
+          nullable: false
         - handle: headers
           json_schema:
             type: object
@@ -332,6 +341,10 @@ nodes:
       - handle: files
         from_flow:
           - input_handle: files
+      - handle: clean_saved_folder
+        value: false
+        from_flow:
+          - input_handle: clean_saved_folder
   - node_id: +python#2
     title: "PLL"
     icon: ":logos:python:"

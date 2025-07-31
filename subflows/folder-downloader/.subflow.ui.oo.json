@@ -28,8 +28,8 @@
       "contentWidth": 519.928676875945,
       "rfNode": {
         "position": {
-          "x": 626.6905876748565,
-          "y": 268.7338122848635
+          "x": 627.8949354486195,
+          "y": 244.64685680960105
         }
       },
       "sections": {
@@ -88,6 +88,7 @@
       "sections": {
         "subflowOutput": {
           "groupCollapsed": {
+            "Results": true,
             "Events": true
           }
         }

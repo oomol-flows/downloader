@@ -53,7 +53,7 @@ nodes:
       - handle: saved_folder
         value: /oomol-driver/downloads/download_tmp
       - handle: found_existing
-        value: override
+        value: ignore
       - handle: download_fail
         value: continue
       - handle: threads_count
@@ -79,6 +79,8 @@ nodes:
         value: 0
       - handle: retry_sleep
         value: 0
+      - handle: clean_saved_folder
+        value: false
     subflow: self::folder-downloader
   - node_id: images_preview#1
     title: "Images preview #1"
