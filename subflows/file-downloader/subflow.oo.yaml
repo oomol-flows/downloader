@@ -147,7 +147,7 @@ nodes:
       - handle: download_fail
         value: error
         from_flow:
-          - input_handle: download_fail
+          []
       - handle: threads_count
         value: 1
         from_flow:
@@ -182,6 +182,7 @@ nodes:
         from_flow:
           - input_handle: retry_sleep
     task: self::files-downloader
+    progress_weight: 100
   - node_id: +python#1
     title: "Create a task for the file"
     icon: ":logos:python:"
@@ -215,7 +216,7 @@ nodes:
               type: object
               additionalProperties: false
               properties:
-                saved_path:
+                file:
                   type: string
                   ui:widget: save
                 url:
@@ -224,6 +225,7 @@ nodes:
                   type: object
                 cookies:
                   type: object
+          nullable: false
       executor:
         name: python
         options:

@@ -5,4 +5,10 @@ scripts:
     poetry install --no-root
 icon: ./icon.png
 dependencies:
-  oomol-preview: 0.1.0
+  {}
+name: downloader
+displayName: Downloader
+description: Downloader is a library for fast, resumable multi-file downloads
+  using thread pooling.
+repository: https://github.com/oomol-flows/downloader
+releaseNotes: init
