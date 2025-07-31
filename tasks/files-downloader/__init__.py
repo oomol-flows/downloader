@@ -6,7 +6,7 @@ from oocana import Context
 #region generated meta
 import typing
 class Inputs(typing.TypedDict):
-  tasks: list[typing.Any]
+  tasks: list[dict]
   found_existing: typing.Literal["ignore", "override"]
   download_fail: typing.Literal["continue", "error"]
   threads_count: int
@@ -20,9 +20,9 @@ class Inputs(typing.TypedDict):
 class Outputs(typing.TypedDict):
   success_paths: list[str]
   failed_urls: list[str]
-  on_task_completed: dict | None
-  on_task_failed: dict | None
-  on_task_failed_with_retry_error: dict | None
+  on_task_completed: dict
+  on_task_failed: dict
+  on_task_failed_with_retry_error: dict
 #endregion
 
 
@@ -44,24 +44,24 @@ def main(params: Inputs, context: Context) -> Outputs:
   failed_urls: list[str] = []
 
   def on_task_completed(task: Task):
-    success_paths.append(str(task.file))
-    task_json = _encode_task(task)
-    progress = float(len(success_paths)) / len(tasks)
     with lock:
+      success_paths.append(str(task.file))
+      task_json = _encode_task(task)
+      progress = float(len(success_paths)) / len(tasks)
       context.output("on_task_completed", task_json)
       context.report_progress(100.0 * progress)
 
   def _on_task_failed(error: TaskError):
-    failed_urls.append(error.task.url)
-    task_json = _encode_task(error.task)
-    task_json["error"] = f"{type(error).__name__}: {error}"
     with lock:
+      failed_urls.append(error.task.url)
+      task_json = _encode_task(error.task)
+      task_json["error"] = f"{type(error).__name__}: {error}"
       context.output("on_task_failed", task_json)
 
   def on_task_failed_with_retry_error(error: RetryError):
-    task_json = _encode_task(error.task)
-    task_json["error"] = f"{type(error).__name__}: {error}"
     with lock:
+      task_json = _encode_task(error.task)
+      task_json["error"] = f"{type(error).__name__}: {error}"
       context.output("on_task_failed_with_retry_error", task_json)
 
   on_task_failed: Callable[..., None] | None = _on_task_failed

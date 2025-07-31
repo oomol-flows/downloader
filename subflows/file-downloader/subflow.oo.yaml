@@ -128,7 +128,7 @@ outputs_def:
           type: object
         error:
           type: string
-    nullable: true
+    nullable: false
     executor_name: python
 nodes:
   - node_id: files-downloader#1

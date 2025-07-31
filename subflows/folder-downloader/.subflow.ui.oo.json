@@ -84,6 +84,13 @@
           "x": 2741.772430498552,
           "y": 479.9036224130442
         }
+      },
+      "sections": {
+        "subflowOutput": {
+          "groupCollapsed": {
+            "Events": true
+          }
+        }
       }
     }
   }

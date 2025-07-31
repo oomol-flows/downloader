@@ -148,7 +148,7 @@ outputs_def:
     nullable: false
     executor_name: python
   - group: Events
-    collapsed: false
+    collapsed: true
   - handle: on_task_completed
     json_schema:
       type: object
@@ -163,7 +163,7 @@ outputs_def:
           type: object
         cookies:
           type: object
-    nullable: true
+    nullable: false
     executor_name: python
   - handle: on_task_failed
     json_schema:
@@ -181,7 +181,7 @@ outputs_def:
           type: object
         error:
           type: string
-    nullable: true
+    nullable: false
     executor_name: python
   - handle: on_task_failed_with_retry_error
     json_schema:
@@ -199,7 +199,7 @@ outputs_def:
           type: object
         error:
           type: string
-    nullable: true
+    nullable: false
     executor_name: python
 nodes:
   - node_id: files-downloader#1
@@ -296,7 +296,7 @@ nodes:
               type: object
               additionalProperties: false
               properties:
-                saved_path:
+                file:
                   type: string
                   ui:widget: save
                 url:
@@ -305,6 +305,7 @@ nodes:
                   type: object
                 cookies:
                   type: object
+          nullable: false
         - handle: saved_folder
           json_schema:
             type: string

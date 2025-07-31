@@ -6,6 +6,19 @@ inputs_def:
   - handle: tasks
     json_schema:
       type: array
+      items:
+        type: object
+        additionalProperties: false
+        properties:
+          file:
+            type: string
+            ui:widget: file
+          url:
+            type: string
+          headers:
+            type: object
+          cookies:
+            type: object
     nullable: false
   - group: Strategy
     collapsed: true
@@ -101,7 +114,7 @@ outputs_def:
           type: object
         cookies:
           type: object
-    nullable: true
+    nullable: false
   - handle: on_task_failed
     json_schema:
       type: object
@@ -118,7 +131,7 @@ outputs_def:
           type: object
         error:
           type: string
-    nullable: true
+    nullable: false
   - handle: on_task_failed_with_retry_error
     json_schema:
       type: object
@@ -135,7 +148,7 @@ outputs_def:
           type: object
         error:
           type: string
-    nullable: true
+    nullable: false
 title: Download files
 ui:
   default_width: 444.2918145734796

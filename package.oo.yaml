@@ -4,3 +4,6 @@ scripts:
     npm install
     poetry install --no-root
 icon: ./icon.png
+dependencies:
+  oomol-transform: 0.0.6
+  oomol-preview: 0.1.0

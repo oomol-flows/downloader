@@ -8,6 +8,55 @@
           "y": 95.7741671649429
         }
       }
+    },
+    "+python#1": {
+      "contentWidth": 572.8524280768352,
+      "rfNode": {
+        "position": {
+          "x": 394.66661776186254,
+          "y": 95.7741671649429
+        }
+      }
+    },
+    "folder-downloader#2": {
+      "rfNode": {
+        "position": {
+          "x": 1069.745927069455,
+          "y": 95.7741671649429
+        }
+      },
+      "sections": {
+        "inputs": {
+          "groupCollapsed": {
+            "Connection": true
+          }
+        },
+        "outputs": {
+          "collapsed": {
+            "on_task_completed": {
+              "[]": true
+            },
+            "on_task_failed": {
+              "[]": true
+            },
+            "on_task_failed_with_retry_error": {
+              "[]": true
+            }
+          },
+          "groupCollapsed": {
+            "Events": true
+          }
+        }
+      }
+    },
+    "images_preview#1": {
+      "contentWidth": 439.4728285941996,
+      "rfNode": {
+        "position": {
+          "x": 1662.93482876886,
+          "y": 369.7741671649429
+        }
+      }
     }
   }
 }
