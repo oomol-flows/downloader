@@ -147,7 +147,7 @@ nodes:
       - handle: download_fail
         value: error
         from_flow:
-          - input_handle: download_fail
+          []
       - handle: threads_count
         value: 1
         from_flow:
@@ -215,7 +215,7 @@ nodes:
               type: object
               additionalProperties: false
               properties:
-                saved_path:
+                file:
                   type: string
                   ui:widget: save
                 url:
@@ -224,6 +224,7 @@ nodes:
                   type: object
                 cookies:
                   type: object
+          nullable: false
       executor:
         name: python
         options:
