@@ -6,3 +6,9 @@ scripts:
 icon: ./icon.png
 dependencies:
   {}
+name: downloader
+displayName: Downloader
+description: Downloader is a library for fast, resumable multi-file downloads
+  using thread pooling.
+repository: https://github.com/oomol-flows/downloader
+releaseNotes: init
