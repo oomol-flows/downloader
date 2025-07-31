@@ -116,14 +116,14 @@ files = [
 
 [[package]]
 name = "downloaderx"
-version = "0.1.0"
+version = "0.1.1"
 description = ""
 optional = false
 python-versions = "<3.13,>=3.10"
 groups = ["main"]
 files = [
-    {file = "downloaderx-0.1.0-py3-none-any.whl", hash = "sha256:4025943393eea9fbe0a87512b08ca86f528c81108c7e18f5eacd7a8e0b44d21c"},
-    {file = "downloaderx-0.1.0.tar.gz", hash = "sha256:8d8ad460bb1377612d23a605ceb7973f6b5bac1b0621c3143f41dd8baba7155f"},
+    {file = "downloaderx-0.1.1-py3-none-any.whl", hash = "sha256:724e64f297625de84424281e58ee440bc863512633af47372b4929ad987116ca"},
+    {file = "downloaderx-0.1.1.tar.gz", hash = "sha256:1169b6f230276c945ee5cf01d68dc95975339effb22d24650f2c13f535d31be3"},
 ]
 
 [package.dependencies]
