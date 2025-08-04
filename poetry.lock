@@ -2,14 +2,14 @@
 
 [[package]]
 name = "certifi"
-version = "2025.7.14"
+version = "2025.8.3"
 description = "Python package for providing Mozilla's CA Bundle."
 optional = false
 python-versions = ">=3.7"
 groups = ["main"]
 files = [
-    {file = "certifi-2025.7.14-py3-none-any.whl", hash = "sha256:6b31f564a415d79ee77df69d757bb49a5bb53bd9f756cbbe24394ffd6fc1f4b2"},
-    {file = "certifi-2025.7.14.tar.gz", hash = "sha256:8ea99dbdfaaf2ba2f9bac77b9249ef62ec5218e7c2b2e903378ed5fccf765995"},
+    {file = "certifi-2025.8.3-py3-none-any.whl", hash = "sha256:f6c12493cfb1b06ba2ff328595af9350c65d6644968e5d3a2ffd78699af217a5"},
+    {file = "certifi-2025.8.3.tar.gz", hash = "sha256:e564105f78ded564e3ae7c923924435e1daa7463faeab5bb932bc53ffae63407"},
 ]
 
 [[package]]
@@ -116,14 +116,14 @@ files = [
 
 [[package]]
 name = "downloaderx"
-version = "0.1.1"
+version = "0.1.3"
 description = ""
 optional = false
 python-versions = "<3.13,>=3.10"
 groups = ["main"]
 files = [
-    {file = "downloaderx-0.1.1-py3-none-any.whl", hash = "sha256:724e64f297625de84424281e58ee440bc863512633af47372b4929ad987116ca"},
-    {file = "downloaderx-0.1.1.tar.gz", hash = "sha256:1169b6f230276c945ee5cf01d68dc95975339effb22d24650f2c13f535d31be3"},
+    {file = "downloaderx-0.1.3-py3-none-any.whl", hash = "sha256:d0bc5a1475de10d7e9ba8c56af2cde8b488dbc6bd70997d842fdbd3b3c33da36"},
+    {file = "downloaderx-0.1.3.tar.gz", hash = "sha256:807aa40d37f89c7d479591bae05ceccfa6987066f2b5a92434dd93318f8f41e2"},
 ]
 
 [package.dependencies]
@@ -187,4 +187,4 @@ zstd = ["zstandard (>=0.18.0)"]
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.10,<3.13"
-content-hash = "63d9244da4ea1eb536a857003550ea0c2627b02dc9cbb342de00a9ad07b9357d"
+content-hash = "cae9dc56e6a0ca41fec16aa40c37425249afe7fae795f8d277e3fa671907e04f"
