@@ -8,7 +8,7 @@ authors = [
 readme = "README.md"
 requires-python = ">=3.10,<3.13"
 dependencies = [
-    "downloaderx (>=0.1.0,<0.2.0)"
+    "downloaderx (==0.1.3)"
 ]
 
 [tool.poetry]
