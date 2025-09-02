@@ -10,10 +10,10 @@ inputs_def:
     json_schema:
       type: string
       ui:widget: dir
-    nullable: true
     value:
+    nullable: true
   - group: Options
-    collapsed: false
+    collapsed: true
   - handle: ensure_folder
     json_schema:
       type: boolean
@@ -21,8 +21,8 @@ inputs_def:
   - handle: file_head
     json_schema:
       type: string
-    nullable: true
     value:
+    nullable: true
 outputs_def:
   - handle: file
     json_schema:
