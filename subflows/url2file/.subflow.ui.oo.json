@@ -1,0 +1,72 @@
+{
+  "nodes": {
+    "+python#1": {
+      "contentWidth": 450,
+      "rfNode": {
+        "position": {
+          "x": 517.1244175169307,
+          "y": 133.19541984732822
+        }
+      },
+      "sections": {
+        "scriptlet": {
+          "cardCollapsed": true
+        }
+      }
+    },
+    "file-downloader#1": {
+      "rfNode": {
+        "position": {
+          "x": 1109.1511389399911,
+          "y": -266.69312977099236
+        }
+      },
+      "sections": {
+        "inputs": {
+          "collapsed": {
+            "headers": {
+              "[]": true
+            },
+            "cookies": {
+              "[]": true
+            },
+            "failure_ladder": {
+              "[]": true
+            }
+          }
+        },
+        "outputs": {
+          "groupCollapsed": {
+            "Events": true
+          }
+        }
+      }
+    }
+  },
+  "pseudoNodes": {
+    "input": {
+      "rfNode": {
+        "position": {
+          "x": -50.42442748091605,
+          "y": -289.6396946564886
+        }
+      },
+      "sections": {
+        "subflowInput": {
+          "groupCollapsed": {
+            "Connection": true,
+            "Strategy": true
+          }
+        }
+      }
+    },
+    "output": {
+      "rfNode": {
+        "position": {
+          "x": 1610.5740458015266,
+          "y": 266.1251908396946
+        }
+      }
+    }
+  }
+}

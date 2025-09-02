@@ -10,8 +10,8 @@ class Inputs(typing.TypedDict):
   ensure_folder: bool
   file_head: str | None
 class Outputs(typing.TypedDict):
-  file: str
   name: str
+  saved_path: str
   saved_folder: str
 #endregion
 
@@ -38,7 +38,7 @@ def main(params: Inputs, context: Context) -> Outputs:
     file_head=params["file_head"],
   )
   return {
-    "file": str(file_path),
     "name": file_path.name,
+    "saved_path": str(file_path),
     "saved_folder": str(file_path),
   }
