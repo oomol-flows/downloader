@@ -53,7 +53,7 @@ def main(params: Inputs, context: Context) -> Outputs:
 
   def _on_task_failed(error: TaskError):
     with lock:
-      failed_urls.append(error.task.url)
+      failed_urls.append(error.task.get_url())
       task_json = _encode_task(error.task)
       task_json["error"] = f"{type(error).__name__}: {error}"
       context.output("on_task_failed", task_json)

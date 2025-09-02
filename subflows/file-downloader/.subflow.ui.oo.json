@@ -76,8 +76,7 @@
       "sections": {
         "subflowInput": {
           "groupCollapsed": {
-            "Strategy": true,
-            "Connection": true
+            "Strategy": true
           }
         }
       }

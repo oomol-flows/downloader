@@ -1,0 +1,265 @@
+inputs_def:
+  - handle: url
+    json_schema:
+      type: string
+    nullable: false
+    executor_name: python
+  - handle: saved_folder
+    json_schema:
+      type: string
+      ui:widget: dir
+    nullable: true
+    value:
+    executor_name: python
+  - group: Strategy
+    collapsed: true
+  - handle: ensure_folder
+    json_schema:
+      type: boolean
+    nullable: false
+    value: false
+    executor_name: python
+  - handle: file_head
+    json_schema:
+      type: string
+    nullable: true
+    value:
+    executor_name: python
+  - handle: if_existing
+    json_schema:
+      enum:
+        - ignore
+        - override
+      ui:options:
+        labels:
+          - Ignore
+          - Override
+    nullable: false
+    value: override
+    executor_name: python
+  - group: Connection
+    collapsed: true
+  - handle: threads_count
+    json_schema:
+      type: integer
+      minimum: 1
+    nullable: false
+    value: 1
+    executor_name: python
+  - handle: headers
+    json_schema:
+      type: object
+      properties:
+        {}
+    nullable: false
+    value:
+      {}
+    executor_name: python
+  - handle: cookies
+    json_schema:
+      type: object
+      properties:
+        {}
+    nullable: false
+    value:
+      {}
+    executor_name: python
+  - handle: window_width
+    json_schema:
+      type: integer
+    nullable: false
+    value: 7
+    executor_name: python
+  - handle: failure_ladder
+    json_schema:
+      type: array
+      items:
+        type: integer
+        minimum: 1
+    nullable: false
+    value:
+      - 5
+    executor_name: python
+  - handle: min_segment_length
+    json_schema:
+      type: integer
+      minimum: 1
+    nullable: false
+    value: 1048576
+    executor_name: python
+  - handle: once_fetch_size
+    json_schema:
+      type: integer
+      minimum: 1
+    nullable: false
+    value: 16384
+    executor_name: python
+  - handle: timeout
+    json_schema:
+      type: number
+      minimum: 0
+    nullable: false
+    value: 30
+    executor_name: python
+  - handle: retry_times
+    json_schema:
+      type: integer
+      minimum: 0
+    nullable: false
+    value: 0
+    executor_name: python
+  - handle: retry_sleep
+    json_schema:
+      type: number
+      minimum: 0
+    nullable: false
+    value: 0
+    executor_name: python
+outputs_def:
+  - handle: file
+    json_schema:
+      type: string
+      ui:widget: save
+    nullable: false
+    executor_name: python
+  - handle: name
+    json_schema:
+      type: string
+    nullable: false
+    executor_name: python
+  - handle: saved_folder
+    json_schema:
+      type: string
+      ui:widget: dir
+    nullable: false
+    executor_name: python
+nodes:
+  - node_id: +python#1
+    title: "Convert to saved path"
+    icon: ":logos:python:"
+    task:
+      ui:
+        default_width: 450
+      inputs_def:
+        - handle: url
+          json_schema:
+            type: string
+        - handle: saved_folder
+          json_schema:
+            type: string
+            ui:widget: dir
+          nullable: true
+        - group: Options
+        - handle: ensure_folder
+          json_schema:
+            type: boolean
+        - handle: file_head
+          json_schema:
+            type: string
+          nullable: true
+      outputs_def:
+        - handle: name
+          json_schema:
+            type: string
+        - handle: saved_path
+          json_schema:
+            type: string
+            ui:widget: save
+        - handle: saved_folder
+          json_schema:
+            type: string
+            ui:widget: dir
+      executor:
+        name: python
+        options:
+          entry: scriptlets/+scriptlet#1.py
+    inputs_from:
+      - handle: saved_folder
+        value:
+        from_flow:
+          - input_handle: saved_folder
+      - handle: ensure_folder
+        value: false
+        from_flow:
+          - input_handle: ensure_folder
+      - handle: file_head
+        value:
+        from_flow:
+          - input_handle: file_head
+      - handle: url
+        from_flow:
+          - input_handle: url
+  - node_id: file-downloader#1
+    title: "Download a file #1"
+    inputs_from:
+      - handle: url
+        from_flow:
+          - input_handle: url
+      - handle: saved_path
+        value: null
+        from_node:
+          - node_id: +python#1
+            output_handle: saved_path
+      - handle: if_existing
+        value: override
+        from_flow:
+          - input_handle: if_existing
+      - handle: threads_count
+        value: 1
+        from_flow:
+          - input_handle: threads_count
+      - handle: headers
+        value:
+          {}
+        from_flow:
+          - input_handle: headers
+      - handle: cookies
+        value:
+          {}
+        from_flow:
+          - input_handle: cookies
+      - handle: window_width
+        value: 7
+        from_flow:
+          - input_handle: window_width
+      - handle: failure_ladder
+        value:
+          - 5
+        from_flow:
+          - input_handle: failure_ladder
+      - handle: min_segment_length
+        value: 1048576
+        from_flow:
+          - input_handle: min_segment_length
+      - handle: once_fetch_size
+        value: 16384
+        from_flow:
+          - input_handle: once_fetch_size
+      - handle: timeout
+        value: 30
+        from_flow:
+          - input_handle: timeout
+      - handle: retry_times
+        value: 0
+        from_flow:
+          - input_handle: retry_times
+      - handle: retry_sleep
+        value: 0
+        from_flow:
+          - input_handle: retry_sleep
+    subflow: self::file-downloader
+    progress_weight: 100
+title: URL to file
+outputs_from:
+  - handle: file
+    from_node:
+      - node_id: file-downloader#1
+        output_handle: saved_path
+  - handle: name
+    from_node:
+      - node_id: +python#1
+        output_handle: name
+  - handle: saved_folder
+    from_node:
+      - node_id: +python#1
+        output_handle: saved_folder
