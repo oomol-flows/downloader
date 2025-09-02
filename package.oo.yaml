@@ -1,4 +1,4 @@
-version: 0.0.2
+version: 0.0.3
 scripts:
   bootstrap: |
     npm install
@@ -11,4 +11,4 @@ displayName: Downloader
 description: Downloader is a library for fast, resumable multi-file downloads
   using thread pooling.
 repository: https://github.com/oomol-flows/downloader
-releaseNotes: fix bug (URL to file not working)
+releaseNotes: add layer
