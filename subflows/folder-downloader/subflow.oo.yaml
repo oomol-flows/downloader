@@ -1,5 +1,6 @@
 inputs_def:
   - handle: files
+    description: "List of files to download with their URLs and names"
     json_schema:
       type: array
       items:
@@ -13,6 +14,7 @@ inputs_def:
     nullable: false
     executor_name: python
   - handle: saved_folder
+    description: "Folder where downloaded files will be saved"
     json_schema:
       type: string
       ui:widget: dir
@@ -22,6 +24,7 @@ inputs_def:
   - group: Strategy
     collapsed: true
   - handle: found_existing
+    description: "Action to take when files already exist"
     json_schema:
       enum:
         - ignore
@@ -34,6 +37,7 @@ inputs_def:
     nullable: false
     executor_name: python
   - handle: download_fail
+    description: "Action to take when downloads fail"
     json_schema:
       enum:
         - continue
@@ -46,6 +50,7 @@ inputs_def:
     nullable: false
     executor_name: python
   - handle: clean_saved_folder
+    description: "Whether to clean the target folder before downloading"
     json_schema:
       type: boolean
     executor_name: python
@@ -53,6 +58,7 @@ inputs_def:
   - group: Connection
     collapsed: true
   - handle: threads_count
+    description: "Number of concurrent download threads"
     json_schema:
       type: integer
       minimum: 1
@@ -130,6 +136,7 @@ inputs_def:
     executor_name: python
 outputs_def:
   - handle: saved_folder
+    description: "Path of the folder containing downloaded files"
     json_schema:
       type: string
       ui:widget: dir
@@ -138,6 +145,7 @@ outputs_def:
   - group: Results
     collapsed: true
   - handle: success_paths
+    description: "List of successfully downloaded file paths"
     json_schema:
       type: array
       items:
@@ -146,6 +154,7 @@ outputs_def:
     nullable: false
     executor_name: python
   - handle: failed_urls
+    description: "List of URLs that failed to download"
     json_schema:
       type: array
       items:
@@ -407,6 +416,8 @@ nodes:
           - node_id: files-downloader#1
             output_handle: failed_urls
 title: Download to a folder (multi-files)
+description: "Downloads multiple files to a specified folder with batch
+  processing and folder management capabilities"
 outputs_from:
   - handle: success_paths
     from_node:
