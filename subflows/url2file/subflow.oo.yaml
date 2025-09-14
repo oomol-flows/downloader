@@ -1,10 +1,12 @@
 inputs_def:
   - handle: url
+    description: "URL of the file to download"
     json_schema:
       type: string
     nullable: false
     executor_name: python
   - handle: saved_folder
+    description: "Folder where the file will be saved (auto-detect if empty)"
     json_schema:
       type: string
       ui:widget: dir
@@ -14,18 +16,21 @@ inputs_def:
   - group: Strategy
     collapsed: true
   - handle: ensure_folder
+    description: "Whether to create the folder if it doesn't exist"
     json_schema:
       type: boolean
     nullable: false
     value: false
     executor_name: python
   - handle: file_head
+    description: "Custom filename prefix (optional)"
     json_schema:
       type: string
     nullable: true
     value:
     executor_name: python
   - handle: if_existing
+    description: "Action to take when file already exists"
     json_schema:
       enum:
         - ignore
@@ -117,17 +122,20 @@ inputs_def:
     executor_name: python
 outputs_def:
   - handle: file
+    description: "Path of the downloaded file"
     json_schema:
       type: string
       ui:widget: save
     nullable: false
     executor_name: python
   - handle: name
+    description: "Auto-detected filename from URL"
     json_schema:
       type: string
     nullable: false
     executor_name: python
   - handle: saved_folder
+    description: "Path of the folder containing the downloaded file"
     json_schema:
       type: string
       ui:widget: dir
@@ -250,6 +258,8 @@ nodes:
     subflow: self::file-downloader
     progress_weight: 100
 title: URL to file
+description: "Automatically downloads a file from URL with smart filename
+  detection and folder management"
 outputs_from:
   - handle: file
     from_node:

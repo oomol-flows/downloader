@@ -1,10 +1,12 @@
 inputs_def:
   - handle: url
+    description: "URL of the file to download"
     json_schema:
       type: string
     nullable: false
     executor_name: python
   - handle: saved_path
+    description: "Path where the downloaded file will be saved"
     json_schema:
       type: string
       ui:widget: save
@@ -14,6 +16,7 @@ inputs_def:
   - group: Strategy
     collapsed: true
   - handle: if_existing
+    description: "Action to take when file already exists"
     json_schema:
       enum:
         - ignore
@@ -28,6 +31,7 @@ inputs_def:
   - group: Connection
     collapsed: false
   - handle: threads_count
+    description: "Number of concurrent download threads"
     json_schema:
       type: integer
       minimum: 1
@@ -35,6 +39,7 @@ inputs_def:
     nullable: false
     executor_name: python
   - handle: headers
+    description: "HTTP headers to send with the request"
     json_schema:
       type: object
       properties:
@@ -44,6 +49,7 @@ inputs_def:
     nullable: false
     executor_name: python
   - handle: cookies
+    description: "HTTP cookies to send with the request"
     json_schema:
       type: object
       properties:
@@ -53,12 +59,14 @@ inputs_def:
     nullable: false
     executor_name: python
   - handle: window_width
+    description: "Download window width for connection management"
     json_schema:
       type: integer
     value: 7
     nullable: false
     executor_name: python
   - handle: failure_ladder
+    description: "Retry intervals in seconds for failed downloads"
     json_schema:
       type: array
       items:
@@ -69,6 +77,7 @@ inputs_def:
     nullable: false
     executor_name: python
   - handle: min_segment_length
+    description: "Minimum segment length in bytes for multi-part downloads"
     json_schema:
       type: integer
       minimum: 1
@@ -76,6 +85,7 @@ inputs_def:
     nullable: false
     executor_name: python
   - handle: once_fetch_size
+    description: "Size in bytes to fetch per request"
     json_schema:
       type: integer
       minimum: 1
@@ -83,6 +93,7 @@ inputs_def:
     nullable: false
     executor_name: python
   - handle: timeout
+    description: "Request timeout in seconds"
     json_schema:
       type: number
       minimum: 0
@@ -90,6 +101,7 @@ inputs_def:
     nullable: false
     executor_name: python
   - handle: retry_times
+    description: "Number of retry attempts for failed downloads"
     json_schema:
       type: integer
       minimum: 0
@@ -97,6 +109,7 @@ inputs_def:
     nullable: false
     executor_name: python
   - handle: retry_sleep
+    description: "Sleep time in seconds between retry attempts"
     json_schema:
       type: number
       minimum: 0
@@ -105,6 +118,7 @@ inputs_def:
     executor_name: python
 outputs_def:
   - handle: saved_path
+    description: "Path of the successfully downloaded file"
     json_schema:
       type: string
       ui:widget: save
@@ -113,6 +127,7 @@ outputs_def:
   - group: Events
     collapsed: true
   - handle: on_task_failed_with_retry_error
+    description: "Event triggered when download fails after all retry attempts"
     json_schema:
       type: object
       additionalProperties: false
@@ -276,6 +291,8 @@ nodes:
           - node_id: files-downloader#1
             output_handle: success_paths
 title: Download a file
+description: "Downloads a single file from a URL with configurable retry
+  mechanisms and performance settings"
 outputs_from:
   - handle: on_task_failed_with_retry_error
     from_node:

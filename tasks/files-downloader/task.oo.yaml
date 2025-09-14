@@ -4,6 +4,7 @@ executor:
     entry: __init__.py
 inputs_def:
   - handle: tasks
+    description: "List of download tasks with file paths, URLs, headers, and cookies"
     json_schema:
       type: array
       items:
@@ -23,6 +24,7 @@ inputs_def:
   - group: Strategy
     collapsed: true
   - handle: found_existing
+    description: "Action to take when file already exists"
     json_schema:
       enum:
         - ignore
@@ -33,6 +35,7 @@ inputs_def:
           - Override
     value: override
   - handle: download_fail
+    description: "Action to take when download fails"
     json_schema:
       enum:
         - continue
@@ -45,15 +48,18 @@ inputs_def:
   - group: Connection
     collapsed: true
   - handle: threads_count
+    description: "Number of concurrent download threads"
     json_schema:
       type: integer
       minimum: 1
     value: 1
   - handle: window_width
+    description: "Download window width for connection management"
     json_schema:
       type: integer
     value: 7
   - handle: failure_ladder
+    description: "Retry intervals in seconds for failed downloads"
     json_schema:
       type: array
       items:
@@ -62,38 +68,45 @@ inputs_def:
     value:
       - 5
   - handle: min_segment_length
+    description: "Minimum segment length in bytes for multi-part downloads"
     json_schema:
       type: integer
       minimum: 1
     value: 1048576
   - handle: once_fetch_size
+    description: "Size in bytes to fetch per request"
     json_schema:
       type: integer
       minimum: 1
     value: 16384
   - handle: timeout
+    description: "Request timeout in seconds"
     json_schema:
       type: number
       minimum: 0
     value: 30
   - handle: retry_times
+    description: "Number of retry attempts for failed downloads"
     json_schema:
       type: integer
       minimum: 0
     value: 0
   - handle: retry_sleep
+    description: "Sleep time in seconds between retry attempts"
     json_schema:
       type: number
       minimum: 0
     value: 0
 outputs_def:
   - handle: success_paths
+    description: "List of successfully downloaded file paths"
     json_schema:
       type: array
       items:
         type: string
         ui:widget: save
   - handle: failed_urls
+    description: "List of URLs that failed to download"
     json_schema:
       type: array
       items:
@@ -101,6 +114,7 @@ outputs_def:
   - group: Events
     collapsed: true
   - handle: on_task_completed
+    description: "Event triggered when a download task completes successfully"
     json_schema:
       type: object
       additionalProperties: false
@@ -116,6 +130,7 @@ outputs_def:
           type: object
     nullable: false
   - handle: on_task_failed
+    description: "Event triggered when a download task fails"
     json_schema:
       type: object
       additionalProperties: false
@@ -133,6 +148,7 @@ outputs_def:
           type: string
     nullable: false
   - handle: on_task_failed_with_retry_error
+    description: "Event triggered when a download task fails after all retry attempts"
     json_schema:
       type: object
       additionalProperties: false
@@ -150,5 +166,7 @@ outputs_def:
           type: string
     nullable: false
 title: Download files
+description: "Downloads files from URLs with support for multi-threading, retry
+  mechanisms, and progress tracking"
 ui:
   default_width: 444.2918145734796
