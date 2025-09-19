@@ -1,4 +1,4 @@
-version: 0.0.4
+version: 0.0.5
 scripts:
   bootstrap: |
     npm install
@@ -10,4 +10,4 @@ name: downloader
 displayName: "%downloader%"
 description: "%downloader-is-a-library-for-fast-resumable-multi-file-downloads%"
 repository: https://github.com/oomol-flows/downloader
-releaseNotes: add layer
+releaseNotes: upgrade downloaderX to fix bug
