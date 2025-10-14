@@ -10,9 +10,9 @@ class Inputs(typing.TypedDict):
   ensure_folder: bool
   file_head: str | None
 class Outputs(typing.TypedDict):
-  name: str
-  saved_path: str
-  saved_folder: str
+  name: typing.NotRequired[str]
+  saved_path: typing.NotRequired[str]
+  saved_folder: typing.NotRequired[str]
 #endregion
 
 def main(params: Inputs, context: Context) -> Outputs:

@@ -18,11 +18,11 @@ class Inputs(typing.TypedDict):
   retry_times: int
   retry_sleep: float
 class Outputs(typing.TypedDict):
-  success_paths: list[str]
-  failed_urls: list[str]
-  on_task_completed: dict
-  on_task_failed: dict
-  on_task_failed_with_retry_error: dict
+  success_paths: typing.NotRequired[list[str]]
+  failed_urls: typing.NotRequired[list[str]]
+  on_task_completed: typing.NotRequired[dict]
+  on_task_failed: typing.NotRequired[dict]
+  on_task_failed_with_retry_error: typing.NotRequired[dict]
 #endregion
 
 

@@ -11,8 +11,8 @@ class Inputs(typing.TypedDict):
   headers: dict
   cookies: dict
 class Outputs(typing.TypedDict):
-  tasks: list[dict]
-  saved_folder: str
+  tasks: typing.NotRequired[list[dict]]
+  saved_folder: typing.NotRequired[str]
 #endregion
 
 
