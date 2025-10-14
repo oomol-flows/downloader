@@ -5,7 +5,7 @@ import typing
 class Inputs(typing.TypedDict):
   success_paths: list[str]
 class Outputs(typing.TypedDict):
-  success_path: str
+  success_path: typing.NotRequired[str]
 #endregion
 
 def main(params: Inputs, context: Context) -> Outputs:

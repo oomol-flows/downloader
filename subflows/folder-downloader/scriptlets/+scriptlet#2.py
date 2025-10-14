@@ -7,9 +7,9 @@ class Inputs(typing.TypedDict):
   success_paths: list[str]
   failed_urls: list[str]
 class Outputs(typing.TypedDict):
-  saved_folder: str
-  success_paths: list[str]
-  failed_urls: list[str]
+  saved_folder: typing.NotRequired[str]
+  success_paths: typing.NotRequired[list[str]]
+  failed_urls: typing.NotRequired[list[str]]
 #endregion
 
 def main(params: Inputs) -> Outputs:

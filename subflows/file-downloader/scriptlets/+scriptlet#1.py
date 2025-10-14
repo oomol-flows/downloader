@@ -10,7 +10,7 @@ class Inputs(typing.TypedDict):
   headers: dict
   cookies: dict
 class Outputs(typing.TypedDict):
-  tasks: list[dict]
+  tasks: typing.NotRequired[list[dict]]
 #endregion
 
 
