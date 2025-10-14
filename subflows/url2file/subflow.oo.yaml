@@ -1,36 +1,36 @@
 inputs_def:
   - handle: url
-    description: "URL of the file to download"
+    description: "%url-of-the-file-to-download2%"
     json_schema:
       type: string
     nullable: false
     executor_name: python
   - handle: saved_folder
-    description: "Folder where the file will be saved (auto-detect if empty)"
+    description: "%folder-where-the-file-will-be-saved-auto-detect-if-empty%"
     json_schema:
       type: string
       ui:widget: dir
-    nullable: true
     value:
+    nullable: true
     executor_name: python
   - group: Strategy
     collapsed: true
   - handle: ensure_folder
-    description: "Whether to create the folder if it doesn't exist"
+    description: "%whether-to-create-the-folder-if-it-doesn-t-exist%"
     json_schema:
       type: boolean
-    nullable: false
     value: false
+    nullable: false
     executor_name: python
   - handle: file_head
-    description: "Custom filename prefix (optional)"
+    description: "%custom-filename-prefix-optional%"
     json_schema:
       type: string
-    nullable: true
     value:
+    nullable: true
     executor_name: python
   - handle: if_existing
-    description: "Action to take when file already exists"
+    description: "%action-to-take-when-file-already-exists3%"
     json_schema:
       enum:
         - ignore
@@ -39,8 +39,8 @@ inputs_def:
         labels:
           - Ignore
           - Override
-    nullable: false
     value: override
+    nullable: false
     executor_name: python
   - group: Connection
     collapsed: true
@@ -48,32 +48,32 @@ inputs_def:
     json_schema:
       type: integer
       minimum: 1
-    nullable: false
     value: 1
+    nullable: false
     executor_name: python
   - handle: headers
     json_schema:
       type: object
       properties:
         {}
-    nullable: false
     value:
       {}
+    nullable: false
     executor_name: python
   - handle: cookies
     json_schema:
       type: object
       properties:
         {}
-    nullable: false
     value:
       {}
+    nullable: false
     executor_name: python
   - handle: window_width
     json_schema:
       type: integer
-    nullable: false
     value: 7
+    nullable: false
     executor_name: python
   - handle: failure_ladder
     json_schema:
@@ -81,44 +81,44 @@ inputs_def:
       items:
         type: integer
         minimum: 1
-    nullable: false
     value:
       - 5
+    nullable: false
     executor_name: python
   - handle: min_segment_length
     json_schema:
       type: integer
       minimum: 1
-    nullable: false
     value: 1048576
+    nullable: false
     executor_name: python
   - handle: once_fetch_size
     json_schema:
       type: integer
       minimum: 1
-    nullable: false
     value: 16384
+    nullable: false
     executor_name: python
   - handle: timeout
     json_schema:
       type: number
       minimum: 0
-    nullable: false
     value: 30
+    nullable: false
     executor_name: python
   - handle: retry_times
     json_schema:
       type: integer
       minimum: 0
-    nullable: false
     value: 0
+    nullable: false
     executor_name: python
   - handle: retry_sleep
     json_schema:
       type: number
       minimum: 0
-    nullable: false
     value: 0
+    nullable: false
     executor_name: python
 outputs_def:
   - handle: file
@@ -143,7 +143,7 @@ outputs_def:
     executor_name: python
 nodes:
   - node_id: +python#1
-    title: "Convert to saved path"
+    title: "%convert-to-saved-path%"
     icon: ":logos:python:"
     task:
       ui:
@@ -198,7 +198,7 @@ nodes:
         from_flow:
           - input_handle: url
   - node_id: file-downloader#1
-    title: "Download a file #1"
+    title: "%download-a-file-1%"
     inputs_from:
       - handle: url
         from_flow:
@@ -257,9 +257,8 @@ nodes:
           - input_handle: retry_sleep
     subflow: self::file-downloader
     progress_weight: 100
-title: URL to file
-description: "Automatically downloads a file from URL with smart filename
-  detection and folder management"
+title: "%url-to-file%"
+description: "%automatically-downloads-a-file-from-url-with-smart-filename-dete%"
 outputs_from:
   - handle: file
     from_node:
