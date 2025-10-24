@@ -29,7 +29,7 @@ inputs_def:
     nullable: false
     executor_name: python
   - group: Connection
-    collapsed: false
+    collapsed: true
   - handle: threads_count
     description: "%number-of-concurrent-download-threads2%"
     json_schema:

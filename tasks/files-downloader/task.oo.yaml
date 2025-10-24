@@ -165,7 +165,7 @@ outputs_def:
         error:
           type: string
     nullable: false
-title: 下载文件
+title: 批量下载文件
 description: "Downloads files from URLs with support for multi-threading, retry
   mechanisms, and progress tracking"
 ui:
