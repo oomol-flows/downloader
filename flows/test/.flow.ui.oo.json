@@ -1,0 +1,25 @@
+{
+  "nodes": {
+    "file-downloader#1": {
+      "rfNode": {
+        "position": {
+          "x": -457.73024624078664,
+          "y": 300.1859490709512
+        }
+      },
+      "sections": {
+        "inputs": {
+          "groupCollapsed": {
+            "Strategy": true,
+            "Connection": true
+          }
+        },
+        "outputs": {
+          "groupCollapsed": {
+            "Events": true
+          }
+        }
+      }
+    }
+  }
+}

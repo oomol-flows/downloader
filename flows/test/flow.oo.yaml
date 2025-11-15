@@ -1,0 +1,34 @@
+nodes:
+  - node_id: file-downloader#1
+    title: "下载文件 #1"
+    inputs_from:
+      - handle: url
+        value: https://fusion-api-dev-us.s3.oss-us-west-1.aliyuncs.com/tinify-png-shrink/r9270ydqyjjv71a5bjqnee3998qtny5c.jpg?X-Amz-Acl=private&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=LTAI5tQWyALQzMKySi4Qh34s%2F20251115%2Foss-us-west-1%2Fs3%2Faws4_request&X-Amz-Date=20251115T081649Z&X-Amz-Expires=604799&X-Amz-Signature=7408f818e6a55b9251f079e47c3a3dd7fe02ba6ec353ab9039a29ddd1a1c20d6&X-Amz-SignedHeaders=host
+      - handle: saved_path
+        value: null
+      - handle: if_existing
+        value: override
+      - handle: threads_count
+        value: 1
+      - handle: headers
+        value:
+          {}
+      - handle: cookies
+        value:
+          {}
+      - handle: window_width
+        value: 7
+      - handle: failure_ladder
+        value:
+          - 5
+      - handle: min_segment_length
+        value: 1048576
+      - handle: once_fetch_size
+        value: 16384
+      - handle: timeout
+        value: 30
+      - handle: retry_times
+        value: 0
+      - handle: retry_sleep
+        value: 0
+    subflow: self::file-downloader
