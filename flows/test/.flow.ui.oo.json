@@ -20,6 +20,27 @@
           }
         }
       }
+    },
+    "file-downloader#2": {
+      "rfNode": {
+        "position": {
+          "x": 1024.1309006353433,
+          "y": 988.9637264879332
+        }
+      },
+      "sections": {
+        "inputs": {
+          "groupCollapsed": {
+            "Strategy": true,
+            "Connection": true
+          }
+        },
+        "outputs": {
+          "groupCollapsed": {
+            "Events": true
+          }
+        }
+      }
     }
   }
 }

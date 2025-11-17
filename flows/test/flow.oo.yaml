@@ -32,3 +32,36 @@ nodes:
       - handle: retry_sleep
         value: 0
     subflow: self::file-downloader
+  - node_id: file-downloader#2
+    title: "下载文件 #2"
+    inputs_from:
+      - handle: url
+        value: https://v3b.fal.media/files/b/tiger/wJi1mmZv3XOxstJwHajQr.png
+      - handle: saved_path
+        value: null
+      - handle: if_existing
+        value: override
+      - handle: threads_count
+        value: 1
+      - handle: headers
+        value:
+          {}
+      - handle: cookies
+        value:
+          {}
+      - handle: window_width
+        value: 7
+      - handle: failure_ladder
+        value:
+          - 5
+      - handle: min_segment_length
+        value: 1048576
+      - handle: once_fetch_size
+        value: 16384
+      - handle: timeout
+        value: 30
+      - handle: retry_times
+        value: 0
+      - handle: retry_sleep
+        value: 0
+    subflow: self::file-downloader

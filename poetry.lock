@@ -116,14 +116,14 @@ files = [
 
 [[package]]
 name = "downloaderx"
-version = "0.1.6"
+version = "0.1.8"
 description = ""
 optional = false
 python-versions = "<3.13,>=3.10"
 groups = ["main"]
 files = [
-    {file = "downloaderx-0.1.6-py3-none-any.whl", hash = "sha256:189b93a5e6a498b11d29386a461745f4aaca69696b0ed573040b79a0532ff221"},
-    {file = "downloaderx-0.1.6.tar.gz", hash = "sha256:b64127d8ce3360a4d7b3deeac432b2eabfb5bba16714beefbd547fca1a2913dd"},
+    {file = "downloaderx-0.1.8-py3-none-any.whl", hash = "sha256:b7e0de1f323b65662ccbaf7fb9c669d93974a66bee4c9fef97ded10b6dec2ee9"},
+    {file = "downloaderx-0.1.8.tar.gz", hash = "sha256:4c09899e2f0f73416ea7da4555c4c5ac0627d500742c331ef8a47aa1ab7aa428"},
 ]
 
 [package.dependencies]
@@ -187,4 +187,4 @@ zstd = ["zstandard (>=0.18.0)"]
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.10,<3.13"
-content-hash = "7f1ab4e69d636ad524dd76cf6fcd45bdeb83286ad513243a9b2ce7d2ea727945"
+content-hash = "8a05fac8ffb41801a468d6ab738a862a122c4a3647e5eac4ce7cfeab04e254f6"
