@@ -116,14 +116,14 @@ files = [
 
 [[package]]
 name = "downloaderx"
-version = "0.1.8"
-description = ""
+version = "0.1.9"
+description = "Multi-threaded, resumable file downloader for Python"
 optional = false
-python-versions = "<3.13,>=3.10"
+python-versions = "<3.14,>=3.11"
 groups = ["main"]
 files = [
-    {file = "downloaderx-0.1.8-py3-none-any.whl", hash = "sha256:b7e0de1f323b65662ccbaf7fb9c669d93974a66bee4c9fef97ded10b6dec2ee9"},
-    {file = "downloaderx-0.1.8.tar.gz", hash = "sha256:4c09899e2f0f73416ea7da4555c4c5ac0627d500742c331ef8a47aa1ab7aa428"},
+    {file = "downloaderx-0.1.9-py3-none-any.whl", hash = "sha256:4b5d7746c95ff0d50c3e6aa879bf4f09898b3c3e7aef8fc389cbf2bb3d99db1d"},
+    {file = "downloaderx-0.1.9.tar.gz", hash = "sha256:b51af1a5872b4852f3a93808c8d6bd520bac0d3ee01499a466241c97fab2cd1c"},
 ]
 
 [package.dependencies]
@@ -186,5 +186,5 @@ zstd = ["zstandard (>=0.18.0)"]
 
 [metadata]
 lock-version = "2.1"
-python-versions = ">=3.10,<3.13"
-content-hash = "8a05fac8ffb41801a468d6ab738a862a122c4a3647e5eac4ce7cfeab04e254f6"
+python-versions = ">=3.11,<3.13"
+content-hash = "279cc6b626c8cad57c03ea00e4ae3fff14c7bf095552abb35bd49010cf98c95c"

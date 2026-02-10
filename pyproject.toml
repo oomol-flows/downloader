@@ -6,9 +6,9 @@ authors = [
     {name = "TaoZeyu",email = "i@taozeyu.com"}
 ]
 readme = "README.md"
-requires-python = ">=3.10,<3.13"
+requires-python = ">=3.11,<3.13"
 dependencies = [
-    "downloaderx (==0.1.8)"
+    "downloaderx (==0.1.9)"
 ]
 
 [tool.poetry]
